@@ -1,0 +1,9 @@
+Put the OFFICIAL payment logos here as SVG files with these exact names:
+  visa.svg  mastercard.svg  amex.svg  apple-pay.svg  google-pay.svg
+They replace the text badges in the footer, cart and checkout automatically.
+
+Where to get official logos (free for merchants who accept them):
+  - Your payment gateway (Stripe / Telr / Network International) gives you the logo set
+  - Visa: visa.com brand resources | Mastercard: brand.mastercard.com
+  - Apple Pay: developer.apple.com/apple-pay/marketing  | Google Pay: developers.google.com/pay/api/web/guides/brand-guidelines
+Only show logos of payment methods you can actually accept.

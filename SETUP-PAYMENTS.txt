@@ -1,0 +1,46 @@
+ONLINE STORE + PAYMENT SETUP  (Sanjaya Trading FZE)
+=====================================================
+
+HOW IT WORKS
+- Customers add products to the cart -> Checkout -> pay with card / Apple Pay / Google Pay
+  on Stripe's secure payment page -> "Order confirmed" page + email receipt.
+- Prices are re-checked on the server (netlify/functions/create-checkout.js), so nobody
+  can change prices in their browser.
+- Until you add your Stripe key, checkout shows "Send order on WhatsApp" instead, so the
+  site works from day one.
+- Wholesale customers can still send a quote request on WhatsApp from the cart.
+
+EDIT PRICES / STOCK
+- data/products.json   -> "price" (AED incl. VAT), "unit", "step" (0.5 = half kg), "inStock": true/false
+- data/store-config.json -> minOrder, deliveryFee, freeDeliveryOver, deliveryAreas
+  The prices included are ESTIMATES based on UAE retail prices - set your own before going live.
+
+IMPORTANT: DEPLOY WITH GITHUB, NOT DRAG & DROP
+Netlify "drag & drop" does not run payment functions. To make payments work:
+ 1. Create a free account at github.com -> New repository (private) -> "uploading an existing file"
+    -> upload ALL files from this zip (keep the folders) -> Commit.
+ 2. In Netlify: Add new site -> Import an existing project -> GitHub -> choose the repository -> Deploy.
+ 3. Every time you change a file on GitHub, Netlify updates the site automatically.
+
+STRIPE (payment gateway)
+ 1. Sign up at stripe.com with your trade licence (Ajman Free Zone), Emirates ID/passport
+    and UAE bank account. Wait for account approval.
+ 2. Stripe Dashboard -> Settings -> Payment methods: turn on Cards, Apple Pay, Google Pay.
+ 3. Stripe Dashboard -> Developers -> API keys -> copy the SECRET key (sk_live_...).
+    Test first with the test key (sk_test_...) and test card 4242 4242 4242 4242.
+ 4. Netlify -> Site configuration -> Environment variables -> Add:
+       Key:   STRIPE_SECRET_KEY
+       Value: sk_live_...   (never put this key inside any website file!)
+    Then: Deploys -> Trigger deploy.
+ 5. Stripe Dashboard -> Settings -> Emails: turn on "Successful payments" (customer receipts)
+    and your own notifications, so you get an email for every new order.
+    Order details (name, phone, address, items) are in Stripe -> Payments -> the payment -> Metadata.
+
+AMEX: check with your gateway that American Express is enabled for your account.
+If it is not, remove the AMEX badge from index.html, checkout.html and the legal pages.
+
+PAYMENT LOGOS: see images/payments/PUT-LOGOS-HERE.txt
+
+USING TELR OR NETWORK INTERNATIONAL INSTEAD
+Only netlify/functions/create-checkout.js and order-status.js need to change -
+the rest of the store stays the same.
