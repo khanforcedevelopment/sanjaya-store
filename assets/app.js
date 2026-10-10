@@ -4,6 +4,8 @@
 //  Delivery fee, minimum order, areas:  /data/store-config.json
 // =====================================================================
 const WHATSAPP_NUMBER = "971569110077"; // country code + number, no + or spaces
+// Top "website upgrade" notice: shows a countdown and disappears by itself after this date/time (UAE time).
+const NOTICE_ENDS = "2026-10-17T23:59:59+04:00";
 
 const $ = (s) => document.querySelector(s);
 let PRODUCTS = [];
@@ -174,6 +176,7 @@ function bindUI() {
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") { setMenu(false); openCart(false); } });
   }
   $("#tabCart") && ($("#tabCart").onclick = () => openCart(true));
+  initNotice();
   trackActiveSection();
   initVip3D();
   if ($("#nav")) window.addEventListener("scroll", () => $("#nav").classList.toggle("scrolled", window.scrollY > 10), { passive: true });
@@ -182,6 +185,30 @@ function bindUI() {
     document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
   } else document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in"));
   if ($("#year")) $("#year").textContent = new Date().getFullYear();
+}
+
+// ---------- upgrade notice with countdown ----------
+function initNotice() {
+  const bar = $("#noticeBar"); if (!bar) return;
+  const end = new Date(NOTICE_ENDS).getTime();
+  let closed = false; try { closed = sessionStorage.getItem("sanjaya_notice_closed") === NOTICE_ENDS; } catch {}
+  if (closed || !(end > Date.now())) { bar.remove(); return; }
+  bar.hidden = false;
+  const pad = (n) => String(n).padStart(2, "0");
+  const tick = () => {
+    const left = end - Date.now();
+    if (left <= 0) { clearInterval(timer); bar.remove(); return; }
+    const s = Math.floor(left / 1000);
+    $("#nbD").textContent = Math.floor(s / 86400);
+    $("#nbH").textContent = pad(Math.floor((s % 86400) / 3600));
+    $("#nbM").textContent = pad(Math.floor((s % 3600) / 60));
+    $("#nbS").textContent = pad(s % 60);
+  };
+  const timer = setInterval(tick, 1000); tick();
+  $("#noticeClose").onclick = () => {
+    try { sessionStorage.setItem("sanjaya_notice_closed", NOTICE_ENDS); } catch {}
+    clearInterval(timer); bar.remove();
+  };
 }
 
 // ---------- menu ----------
