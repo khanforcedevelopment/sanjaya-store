@@ -540,3 +540,24 @@ html { scroll-padding-top: 90px; }
   .scene { transform: none !important; }
   .hero h1 em, .section.dark h2 em { background-position: 0 center; }
 }
+
+/* ===== Upgrade notice bar (auto-hides after NOTICE_ENDS in app.js) ===== */
+.notice-bar { position: relative; z-index: 51; color: var(--forest); background: linear-gradient(100deg, #b8913f, var(--gold-2) 30%, #fff1c9 50%, var(--gold-2) 70%, #b8913f); background-size: 200% auto; animation: goldShine 9s linear infinite; box-shadow: inset 0 -1px 0 rgba(14,42,28,.15); }
+.notice-inner { display: flex; align-items: center; gap: 14px; padding: 9px 0; }
+.nb-icon { font-size: 1rem; animation: spin 6s linear infinite; }
+.notice-bar p { flex: 1; font-size: .86rem; line-height: 1.4; }
+.notice-bar p b { font-weight: 800; }
+.nb-timer { display: flex; gap: 6px; flex-shrink: 0; }
+.nb-timer span { display: grid; justify-items: center; min-width: 44px; padding: 3px 6px; border-radius: 9px; background: var(--forest); color: var(--gold-2); line-height: 1.1; box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.nb-timer b { font-size: .95rem; font-variant-numeric: tabular-nums; }
+.nb-timer small { font-size: .55rem; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.65); }
+.nb-close { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; font-size: .8rem; color: var(--forest); border: 1px solid rgba(14,42,28,.3); }
+.nb-close:hover { background: rgba(14,42,28,.1); }
+@media (max-width: 820px) {
+  .notice-inner { flex-wrap: wrap; gap: 6px 10px; padding: 8px 0 10px; }
+  .nb-icon { display: none; }
+  .notice-bar p { flex: 1 1 calc(100% - 40px); font-size: .8rem; order: 1; }
+  .nb-close { order: 2; width: 26px; height: 26px; }
+  .nb-timer { order: 3; width: 100%; justify-content: center; }
+  .nb-timer span { min-width: 52px; }
+}
