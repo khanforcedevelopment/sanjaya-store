@@ -168,15 +168,91 @@ function bindUI() {
   $("#quoteWA") && ($("#quoteWA").onclick = whatsappQuote);
   $("#goCheckout")?.addEventListener("click", (e) => { if (e.currentTarget.classList.contains("disabled")) e.preventDefault(); });
   if ($("#burger")) {
-    $("#burger").onclick = () => { $("#menu").classList.toggle("open"); $("#burger").classList.toggle("open"); };
-    document.querySelectorAll("#menu a").forEach((a) => (a.onclick = () => { $("#menu").classList.remove("open"); $("#burger").classList.remove("open"); }));
+    $("#burger").onclick = () => setMenu(!$("#menu").classList.contains("open"));
+    document.querySelectorAll("#menu a").forEach((a) => (a.onclick = () => setMenu(false)));
+    $("#cartOpen")?.addEventListener("click", () => setMenu(false));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { setMenu(false); openCart(false); } });
   }
+  $("#tabCart") && ($("#tabCart").onclick = () => openCart(true));
+  trackActiveSection();
+  initVip3D();
   if ($("#nav")) window.addEventListener("scroll", () => $("#nav").classList.toggle("scrolled", window.scrollY > 10), { passive: true });
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.12 });
     document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
   } else document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in"));
   if ($("#year")) $("#year").textContent = new Date().getFullYear();
+}
+
+// ---------- menu ----------
+function setMenu(open) {
+  $("#menu")?.classList.toggle("open", open);
+  $("#burger")?.classList.toggle("open", open);
+  $("#burger")?.setAttribute("aria-expanded", open);
+  $("#nav")?.classList.toggle("menu-open", open);
+  document.body.classList.toggle("menu-open", open);
+}
+
+// Highlight the menu / tab bar link of the section on screen
+function trackActiveSection() {
+  const links = [...document.querySelectorAll('#menu a[href^="#"], #tabbar a[href^="#"]')];
+  const ids = [...new Set(links.map((a) => a.getAttribute("href").slice(1)))];
+  const sections = ids.map((id) => document.getElementById(id)).filter(Boolean);
+  if (!sections.length) return;
+  const update = () => {
+    const y = window.scrollY + window.innerHeight * 0.35;
+    let current = sections[0].id, best = -Infinity;
+    sections.forEach((s) => { const top = s.getBoundingClientRect().top + window.scrollY; if (top <= y && top > best) { best = top; current = s.id; } });
+    links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + current));
+  };
+  let ticking = false;
+  window.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { update(); ticking = false; }); } }, { passive: true });
+  update();
+}
+
+// ---------- VIP 3D effects ----------
+function initVip3D() {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // gold sparkles in the hero
+  const sp = $("#sparkles");
+  if (sp && !reduce) {
+    sp.innerHTML = Array.from({ length: 26 }, () => {
+      const size = 2 + Math.random() * 4;
+      return `<i style="left:${Math.random() * 100}%;width:${size}px;height:${size}px;animation-duration:${7 + Math.random() * 9}s;animation-delay:${-Math.random() * 14}s"></i>`;
+    }).join("");
+  }
+  if (reduce) return;
+  const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  // hero scene follows the mouse
+  const scene = $("#heroScene");
+  if (scene && fine) {
+    const hero = scene.closest(".hero");
+    hero.addEventListener("pointermove", (e) => {
+      const r = hero.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+      scene.style.setProperty("--ry", `${x * 22}deg`);
+      scene.style.setProperty("--rx", `${-y * 16}deg`);
+    });
+    hero.addEventListener("pointerleave", () => { scene.style.setProperty("--ry", "0deg"); scene.style.setProperty("--rx", "0deg"); });
+    scene.classList.add("interactive");
+  }
+  // 3D tilt + glare on product cards and category tiles
+  if (fine) {
+    let active = null;
+    document.addEventListener("pointermove", (e) => {
+      const el = e.target.closest(".card, .cat-tile");
+      if (active && active !== el) { active.style.transform = ""; active.classList.remove("tilting"); }
+      active = el;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      const max = el.classList.contains("card") ? 10 : 6;
+      el.classList.add("tilting");
+      el.style.transform = `perspective(900px) rotateX(${(0.5 - y) * max}deg) rotateY(${(x - 0.5) * max}deg) translateY(-6px)`;
+      el.style.setProperty("--gx", `${x * 100}%`);
+      el.style.setProperty("--gy", `${y * 100}%`);
+    }, { passive: true });
+  }
 }
 
 // ---------- payment badges: use official logo files if you add them ----------
