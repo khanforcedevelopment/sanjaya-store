@@ -36,7 +36,7 @@ Last updated: 2026-11-03
 
 - [ ] **SMS OTP** for phone login: MSG91 or Twilio (pay per SMS; India requires DLT registration of your sender ID and templates, which takes a few days).
 - [ ] **KYC provider** (ID + selfie liveness): e.g. IDfy, HyperVerge or Digio. Contract and per-check pricing.
-- [ ] **Email sending**: Resend or Postmark (free tier to start).
+- [ ] **Email sending**: Resend or Postmark (free tier to start). Needed for login codes on the live site; Supabase's own mailer allows only a few emails per hour.
 - [ ] **WhatsApp Business** notifications: Meta Cloud API or a provider like Interakt/AiSensy.
 - [ ] **Supabase Pro** (about US$25/month) at launch so the database never pauses and has daily backups.
 - Maps use free OpenStreetMap tiles by default; no account needed unless traffic grows.

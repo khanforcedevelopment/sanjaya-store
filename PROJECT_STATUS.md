@@ -5,10 +5,10 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | Phase | Name | Status |
 |---|---|---|
 | 1 | New project initialization | ✅ Done, merged |
-| 2 | Database and backend architecture | ✅ Done |
-| 3 | VIP branding and homepage | ✅ Done |
-| 4 | Product catalogue | ✅ Done (wishlist page in Phase 17) |
-| 5 | Customer authentication | Not started |
+| 2 | Database and backend architecture | ✅ Done, merged |
+| 3 | VIP branding and homepage | ✅ Done, merged |
+| 4 | Product catalogue | ✅ Done, merged |
+| 5 | Customer authentication | ✅ Done |
 | 6 | Cart and checkout | Not started |
 | 7 | Delivery charges and serviceability | Not started |
 | 8 | Customer GPS address | Not started |
@@ -24,6 +24,41 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 5 report: customer accounts
+
+### Features completed
+- Sign in or register with a one-time 6-digit code by **email** or **Indian mobile** (no passwords). New accounts can enter their name. Safe return to the page the customer came from.
+- Invite links: `?ref=CODE` on any page is remembered on the device and attached when the friend creates an account (counts toward "Invite 5 friends" once their first order is delivered).
+- My account area (`/account`): overview with personal invite link and copy button, profile (name, contact mobile, marketing opt-in), address book, wishlist. Staff see a link to the staff panel.
+- Address book: add, edit, delete, make default; Home/Office/Other; Indian mobile and pincode validation (same rules as the database); city and state filled automatically from the pincode table; live "we deliver here / arriving by" hint. The same form will be reused at checkout.
+- Wishlist page shows saved products as cards; removing updates instantly.
+- Pages needing login redirect to `/login` and come back afterwards.
+
+### Files created or changed
+- `src/pages/auth/LoginPage.tsx`, `src/pages/account/{AccountLayout,AccountOverview,ProfilePage,AddressesPage,WishlistPage}.tsx`
+- `src/features/account/{RequireAuth.tsx,referralCapture.ts,addresses.ts,AddressForm.tsx}`, `src/lib/{phone.ts,indianStates.ts}`
+- `src/app/router.tsx` (login and account routes), `src/components/layout/SiteLayout.tsx` (invite capture), `src/features/catalog/api.ts`
+- `supabase/templates/{magic_link,confirmation}.html` (code emails), `supabase/config.toml` (local OTP settings)
+
+### Database changes
+- Migration `20261103001000_account.sql`: `set_default_address()`; address trigger (first address becomes default, a new default replaces the old one, maximum 20 per customer); `search_products` takes a list of product ids (for the wishlist).
+
+### Tests run
+- Database: 147 assertions pass, including 11 new account tests (addresses are private, default switching, profile columns customers may edit).
+- Web: typecheck, lint, 29 unit tests, production build and secret scan pass.
+- Browser, against a full local Supabase: invite link → protected page → login redirect → email code from the test mailbox → account created → address added with pincode autofill → product saved to wishlist → overview. Desktop and phone screenshots checked, no console errors.
+
+### Errors and fixes
+- Account pages overflowed sideways on phones (scrolling tab row widened the grid); fixed with `min-w-0`.
+
+### Deployment status
+- Merged to `main`; the live site updates automatically. Sign-in works once Supabase is connected (see DEPLOYMENT.md section D, step 3).
+
+### Next requirements
+- For mobile login on the live site: MSG91 or Twilio with DLT registration (USER_TODO, paid). Email login works with free SMTP.
 
 ---
 
