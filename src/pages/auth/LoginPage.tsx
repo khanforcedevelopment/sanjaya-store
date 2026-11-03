@@ -11,7 +11,7 @@ import { useDocumentMeta } from '@/lib/meta'
 import { cn } from '@/lib/cn'
 
 /**
- * Sign-in is always two steps: password, then a 6-digit code emailed to the account.
+ * Sign-in is always two steps: password, then a code (6 to 8 digits) emailed to the account.
  * The server enforces it (see migration login_two_step): a password alone never gives a session.
  */
 type Mode = 'signin' | 'signup' | 'reset'
@@ -49,9 +49,13 @@ export function LoginPage() {
   }, [cooldown])
 
   if (!supabase) return <div className="container-x py-16"><Alert title="Sign-in opens soon">Accounts will be available when the store opens.</Alert></div>
-  if (ready && user && step !== 'newpw') return <Navigate to={next} replace />
+  const resetLink = sp.get('reset') === '1'
+  if (ready && user && step !== 'newpw' && !resetLink) return <Navigate to={next} replace />
 
   const target = email.trim().toLowerCase()
+  // Emails carry a code, and (with Supabase's default email template) a sign-in link. A link
+  // opened on this device lands back here signed in; a reset link comes back with ?reset=1.
+  const linkBack = (reset: boolean) => `${window.location.origin}/login?${new URLSearchParams({ next, ...(reset ? { reset: '1' } : {}) })}`
   const switchMode = (m: Mode) => { setMode(m); setStep('start'); setError(null); setCode('') }
 
   /** Step 1: check the password (or create the account / ask for a reset), which emails a code. */
@@ -68,17 +72,17 @@ export function LoginPage() {
         const { data, error } = await db.rpc('start_password_login', { p_email: target, p_password: password })
         if (error) return setError(friendlyError(error))
         if (data !== 'ok') return setError(LOGIN_ERRORS[data as string] ?? 'Could not sign in. Please try again.')
-        const sent = await db.auth.signInWithOtp({ email: target, options: { shouldCreateUser: false } })
+        const sent = await db.auth.signInWithOtp({ email: target, options: { shouldCreateUser: false, emailRedirectTo: linkBack(false) } })
         if (sent.error) return setError(friendlyError(sent.error))
       } else if (mode === 'signup') {
-        const { data, error } = await db.auth.signUp({ email: target, password, options: { data: { full_name: name.trim(), referral_code: referral ?? undefined } } })
+        const { data, error } = await db.auth.signUp({ email: target, password, options: { emailRedirectTo: linkBack(false), data: { full_name: name.trim(), referral_code: referral ?? undefined } } })
         if (error) return setError(friendlyError(error))
         if (data.user && data.user.identities?.length === 0) return setError('An account with this email already exists. Please sign in.')
       } else {
         const { data, error } = await db.rpc('start_password_reset', { p_email: target })
         if (error) return setError(friendlyError(error))
         if (data !== 'ok') return setError(LOGIN_ERRORS[data as string] ?? 'Could not send a code. Please try again.')
-        const sent = await db.auth.signInWithOtp({ email: target, options: { shouldCreateUser: false } })
+        const sent = await db.auth.signInWithOtp({ email: target, options: { shouldCreateUser: false, emailRedirectTo: linkBack(true) } })
         if (sent.error) return setError(/signups not allowed/i.test(sent.error.message) ? 'No account uses this email. Please create an account.' : friendlyError(sent.error))
       }
       setStep('code')
@@ -92,7 +96,7 @@ export function LoginPage() {
   const verify = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!/^\d{6}$/.test(code)) return setError('Enter the 6-digit code.')
+    if (!/^\d{6,8}$/.test(code)) return setError("Enter the code from the email.")
     setBusy(true)
     const type = mode === 'signup' ? 'signup' : 'email'
     if (mode === 'reset') setStep('newpw') // keep this page open once the reset code signs the user in
@@ -120,7 +124,8 @@ export function LoginPage() {
     navigate(next, { replace: true })
   }
 
-  const subtitle = mode === 'signup' ? 'Create your account. We will email you a code to confirm it.'
+  const subtitle = resetLink && user ? 'Choose a new password for your account.'
+    : mode === 'signup' ? 'Create your account. We will email you a code to confirm it.'
     : mode === 'reset' ? 'We will email you a code to set a new password.'
     : 'Sign in with your password, then the code we email you.'
 
@@ -130,12 +135,12 @@ export function LoginPage() {
         <div className="flex flex-col items-center text-center">
           <Monogram className="size-14" />
           <h1 className="mt-3 font-display text-3xl font-semibold text-navy-900">
-            {mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Reset password' : 'Welcome back'}
+            {mode === 'signup' ? 'Create account' : mode === 'reset' || (resetLink && user) ? 'Reset password' : 'Welcome back'}
           </h1>
           <p className="mt-1 text-sm text-navy-700">{subtitle}</p>
         </div>
 
-        {step === 'start' && (
+        {step === 'start' && !(resetLink && user) && (
           <form onSubmit={start} className="mt-6 space-y-4">
             {mode !== 'reset' && (
               <div className="grid grid-cols-2 gap-1 rounded-full bg-navy-50 p-1" role="tablist">
@@ -168,9 +173,9 @@ export function LoginPage() {
 
         {step === 'code' && (
           <form onSubmit={verify} className="mt-6 space-y-4">
-            <p className="text-center text-sm text-navy-700">We emailed a 6-digit code to <strong>{target}</strong>.</p>
-            <InputField label="Code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} className="[&_input]:text-center [&_input]:text-2xl [&_input]:tracking-[0.5em]" autoFocus />
+            <p className="text-center text-sm text-navy-700">We emailed <strong>{target}</strong>. Enter the code, or open the link in that email on this device.</p>
+            <InputField label="Code" inputMode="numeric" autoComplete="one-time-code" maxLength={8} value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} className="[&_input]:text-center [&_input]:text-2xl [&_input]:tracking-[0.3em]" autoFocus />
             {error && <Alert tone="error">{error}</Alert>}
             <Button type="submit" size="lg" className="w-full" loading={busy}>Verify and continue</Button>
             <div className="flex justify-between text-sm">
@@ -182,7 +187,7 @@ export function LoginPage() {
           </form>
         )}
 
-        {step === 'newpw' && (
+        {(step === 'newpw' || (resetLink && user && step === 'start')) && (
           <form onSubmit={savePassword} className="mt-6 space-y-4">
             <InputField label="New password" type="password" autoComplete="new-password" value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)} hint={`At least ${MIN_PW} characters.`} autoFocus required />
