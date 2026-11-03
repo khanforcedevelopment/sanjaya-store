@@ -1,10 +1,14 @@
-import { Link } from 'react-router-dom'
+import { ButtonLink } from '@/components/ui/Button'
+import { useDocumentMeta } from '@/lib/meta'
 
 export function NotFoundPage() {
+  useDocumentMeta({ title: 'Page not found', noindex: true })
   return (
-    <section className="mx-auto max-w-xl px-4 py-24 text-center">
-      <h1 className="font-display text-3xl text-navy-900">Page not found</h1>
-      <Link to="/" className="mt-6 inline-block text-gold-600 underline">Back to the store</Link>
+    <section className="container-x py-24 text-center">
+      <p className="eyebrow">404</p>
+      <h1 className="mt-2 font-display text-4xl font-semibold text-navy-900">Page not found</h1>
+      <p className="mt-2 text-navy-700">The page you are looking for has moved or no longer exists.</p>
+      <ButtonLink to="/" className="mt-8">Back to the store</ButtonLink>
     </section>
   )
 }

@@ -43,6 +43,7 @@ Last updated: 2026-11-03
 
 ## 5. Real content
 
-- [ ] Product list with photos, prices (₹), stock and variants (a spreadsheet is fine; Claude will build an import).
-- [ ] Banner photos for the homepage (or approve stock images).
+- [ ] Product list with photos, prices (₹), stock and variants. Ask your suppliers/distributors for their product sheet and **photos you are allowed to use** (copying from Amazon or brand sites is not allowed). Upload it with Admin → Products → Import CSV.
+- [ ] Before launch: Admin → Products → **Remove demo products** (the 1000+ sample products are for testing only).
+- [ ] Banner photos for the homepage. Optional: an AI image service key (OpenAI or Google, paid per image) if you want AI-made banner photos; product photos should be real photos of your stock (phone camera on white background is fine).
 - [ ] Staff list with roles: Operations, Delivery, Collections, Support.

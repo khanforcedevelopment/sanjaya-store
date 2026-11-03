@@ -6,8 +6,8 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 |---|---|---|
 | 1 | New project initialization | ✅ Done, merged |
 | 2 | Database and backend architecture | ✅ Done |
-| 3 | VIP branding and homepage | Not started |
-| 4 | Product catalogue | Not started |
+| 3 | VIP branding and homepage | ✅ Done |
+| 4 | Product catalogue | ✅ Done (wishlist page in Phase 17) |
 | 5 | Customer authentication | Not started |
 | 6 | Cart and checkout | Not started |
 | 7 | Delivery charges and serviceability | Not started |
@@ -24,6 +24,26 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 3 + 4 report: branding, homepage and catalogue
+
+### Features completed
+- Navy, white and gold design system (Cormorant Garamond + Manrope, self-hosted), new crowned "S" monogram and wordmark.
+- Header with search and category menu, mobile menu, app-style bottom tab bar on phones, footer, cart drawer.
+- Homepage: rotating hero banners, category tiles, delivery offer strip, flash sale with live countdown, product rails (electronics, laptops, ethnic fashion, watches, bags, footwear), promo pair, "Invite 5 friends" block, installments block. Banners, flash sale and strip text come from the database (admin-editable in Phase 13).
+- Category pages with sub-categories, filters (availability, price bands, brands with counts), sorting, pagination; search with prefix matching; deals page.
+- Product page: image gallery, size/colour/storage option pickers with out-of-stock hints, price with MRP discount, stock level, quantity, add to bag / buy now, pincode delivery check with estimated dates and first-order-free message, installment preview, specs, verified-purchase reviews (write and read), related products.
+- Wishlist hearts (saved per customer).
+- 1,150 original demo products (4,714 variants, tagged `demo`) with generated navy/gold illustrations, loadable with `supabase/demo/demo_catalogue.sql`; `remove_demo_products()` clears them before launch.
+- Bulk product import function with dry-run preview and per-row errors (admin screen in Phase 13).
+
+### Database changes
+`…000800_catalog_search.sql` (search_products, product_reviews, flash_sale setting), `…000900_catalog_admin.sql` (import_products, preview_or_import_products, remove_demo_products).
+
+### Tests performed
+137 database assertions; 19 unit tests; build and secret scan; checked in Chromium against a full local Supabase stack (desktop and phone widths), no console errors.
 
 ---
 

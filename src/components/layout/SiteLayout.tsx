@@ -1,24 +1,27 @@
-import { Link, Outlet } from 'react-router-dom'
-import { business } from '@/config/business'
+import { Suspense, useEffect } from 'react'
+import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
+import { Header } from './Header'
+import { Footer } from './Footer'
+import { MobileNav } from './MobileNav'
+import { BackendNotice } from './BackendNotice'
+import { CartDrawer } from '@/features/cart/CartDrawer'
+import { PageSpinner } from './PageSpinner'
 
 export function SiteLayout() {
+  const { pathname } = useLocation()
+  useEffect(() => { document.documentElement.dataset.route = pathname.split('/')[1] || 'home' }, [pathname])
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="bg-navy-900 text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Link to="/" className="font-display text-xl tracking-[0.2em] text-gold-400">
-            SANJAYA <span className="text-white">STORE</span>
-          </Link>
-        </div>
-      </header>
-      <main className="flex-1">
-        <Outlet />
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-white focus:px-4 focus:py-2">Skip to content</a>
+      <Header />
+      <BackendNotice />
+      <main id="main" className="flex-1 pb-20 md:pb-0">
+        <Suspense fallback={<PageSpinner />}><Outlet /></Suspense>
       </main>
-      <footer className="bg-navy-950 text-sm text-white/70">
-        <div className="mx-auto max-w-6xl px-4 py-6">
-          © {new Date().getFullYear()} {business.legalName}. Dispatch from {business.dispatchCity}, {business.dispatchCountry}.
-        </div>
-      </footer>
+      <Footer />
+      <MobileNav />
+      <CartDrawer />
+      <ScrollRestoration />
     </div>
   )
 }
