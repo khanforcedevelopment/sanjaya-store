@@ -21,9 +21,26 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 15 | Six-installment system | ✅ Done, merged (test mode; live blocked until legal review) |
 | 16 | KYC and automatic eligibility | ✅ Done, merged (document review; automatic provider optional later) |
 | 17 | Customer dashboard | ✅ Done, merged |
-| 18 | Referrals and promotions | Not started |
+| 18 | Referrals and promotions | ✅ Done, merged |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 18 report: referrals and promotions
+
+### Features completed
+- **Invite links** (`?ref=CODE`) are remembered and attached when the friend signs up. A friend who joined without the link can add the code on *My account → Rewards* before their first order.
+- **Rewards are automatic**: when a friend's first order is delivered, they count; every N friends (default 5) issue the campaign reward (coupon/gift voucher or points). Customers see progress, friends and rewards on the Rewards page (Phase 17).
+- **Staff → Referrals** (Super Admin): create, edit, switch campaigns on and off (headline, friends needed, reward type and value, description, end date); see rewards issued and mark physical gifts as sent; review every referral with the friend's order count and a **same phone** warning; reject a suspicious referral with a reason (audited).
+- **Promotions already in place**: coupons and banners (Staff → Banners & coupons), flash sale with countdown (Settings → Flash sale), loyalty points with coupon redemption.
+
+### Database changes
+- `20261103001500_referrals_admin.sql`: `reject_referral` (Super Admin, reason required, audited) and `admin_referrals` (referrals with names, friend's orders and same-phone flag).
+
+### Tests run
+- Database tests: 170 assertions pass (new: only Super Admin can list or reject, reason required).
+- Browser test on local Supabase: referrer copies code → friend signs up through the link and is linked → second friend enters a wrong code (refused) then the right one → referrer sees "2 joined" → Super Admin changes the reward to ₹750 and the customer page shows it immediately → referral rejected with reason, audit written. No browser errors.
 
 ---
 

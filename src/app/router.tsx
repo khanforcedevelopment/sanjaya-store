@@ -39,6 +39,7 @@ const AdminSupport = lazy(() => import('@/pages/admin/AdminSupport').then((m) =>
 const OrdersPage = lazy(() => import('@/pages/account/OrdersPage').then((m) => ({ default: m.OrdersPage })))
 const RewardsPage = lazy(() => import('@/pages/account/RewardsPage').then((m) => ({ default: m.RewardsPage })))
 const SupportPage = lazy(() => import('@/pages/account/SupportPage').then((m) => ({ default: m.SupportPage })))
+const AdminReferrals = lazy(() => import('@/pages/admin/AdminReferrals').then((m) => ({ default: m.AdminReferrals })))
 const RiderQueue = lazy(() => import('@/pages/admin/RiderQueue').then((m) => ({ default: m.RiderQueue })))
 
 /**
@@ -95,6 +96,7 @@ export const routes: RouteObject[] = [
       { path: 'import', element: <RequireAuth roles={['operations']}><AdminImport /></RequireAuth> },
       { path: 'marketing', element: <RequireAuth roles={['operations']}><AdminMarketing /></RequireAuth> },
       { path: 'delivery', element: <RequireAuth roles={['operations']}><AdminDelivery /></RequireAuth> },
+      { path: 'referrals', element: <RequireAuth roles={['super_admin']}><AdminReferrals /></RequireAuth> },
       { path: 'kyc', element: <RequireAuth roles={['super_admin']}><AdminKyc /></RequireAuth> },
       { path: 'staff', element: <RequireAuth roles={['super_admin']}><AdminStaff /></RequireAuth> },
       { path: 'settings', element: <RequireAuth roles={['super_admin']}><AdminSettings /></RequireAuth> },

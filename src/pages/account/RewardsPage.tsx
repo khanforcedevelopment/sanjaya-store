@@ -20,7 +20,9 @@ type Summary = {
 
 export function RewardsPage() {
   useDocumentMeta({ title: 'Rewards', noindex: true })
-  const { user } = useAuth()
+  const { user, profile, refreshProfile } = useAuth()
+  const [code, setCode] = useState('')
+  const [codeMsg, setCodeMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const toast = useToast()
   const qc = useQueryClient()
   const { data: s, isLoading } = useQuery({
@@ -33,6 +35,12 @@ export function RewardsPage() {
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   if (isLoading || !s) return <Skeleton className="h-64" />
+  const applyCode = async () => {
+    const { error } = await requireSupabase().rpc('apply_referral_code', { p_code: code })
+    if (error) return setCodeMsg({ ok: false, text: friendlyError(error) })
+    setCodeMsg({ ok: true, text: 'Code added. Your friend gets credit after your first order is delivered.' })
+    setCode(''); await refreshProfile()
+  }
 
   const link = `${location.origin}/?ref=${s.referral_code}`
   const need = s.campaign?.required_referrals ?? 5
@@ -108,6 +116,17 @@ export function RewardsPage() {
             <Button loading={busy} onClick={redeem} disabled={!pts}>Get coupon</Button>
           </div>
           {err && <div className="mt-3"><Alert tone="error">{err}</Alert></div>}
+          {profile && (!profile.referred_by || codeMsg?.ok) && (
+            <div className="mt-6 border-t border-navy-100 pt-4">
+              <p className="text-sm font-semibold text-navy-900">Invited by a friend?</p>
+              <p className="text-xs text-navy-600">Add their code before your first order.</p>
+              <div className="mt-2 flex flex-wrap items-end gap-2">
+                <InputField label="Friend's code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={16} className="min-w-40 flex-1" />
+                <Button variant="outline" disabled={code.length < 4 || !!profile.referred_by} onClick={applyCode}>Add code</Button>
+              </div>
+              {codeMsg && <div className="mt-2"><Alert tone={codeMsg.ok ? 'success' : 'error'}>{codeMsg.text}</Alert></div>}
+            </div>
+          )}
         </section>
       </div>
     </>
