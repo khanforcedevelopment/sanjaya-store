@@ -35,6 +35,10 @@ const InstallmentsPage = lazy(() => import('@/pages/account/InstallmentsPage').t
 const InstallmentsInfoPage = lazy(() => import('@/pages/InstallmentsInfoPage').then((m) => ({ default: m.InstallmentsInfoPage })))
 const AdminKyc = lazy(() => import('@/pages/admin/AdminKyc').then((m) => ({ default: m.AdminKyc })))
 const VerifyIdentityPage = lazy(() => import('@/pages/account/VerifyIdentityPage').then((m) => ({ default: m.VerifyIdentityPage })))
+const AdminSupport = lazy(() => import('@/pages/admin/AdminSupport').then((m) => ({ default: m.AdminSupport })))
+const OrdersPage = lazy(() => import('@/pages/account/OrdersPage').then((m) => ({ default: m.OrdersPage })))
+const RewardsPage = lazy(() => import('@/pages/account/RewardsPage').then((m) => ({ default: m.RewardsPage })))
+const SupportPage = lazy(() => import('@/pages/account/SupportPage').then((m) => ({ default: m.SupportPage })))
 const RiderQueue = lazy(() => import('@/pages/admin/RiderQueue').then((m) => ({ default: m.RiderQueue })))
 
 /**
@@ -62,11 +66,15 @@ export const routes: RouteObject[] = [
         element: <RequireAuth><AccountLayout /></RequireAuth>,
         children: [
           { index: true, element: <AccountOverview /> },
+          { path: 'orders', element: <OrdersPage /> },
           { path: 'profile', element: <ProfilePage /> },
           { path: 'addresses', element: <AddressesPage /> },
           { path: 'wishlist', element: <WishlistPage /> },
           { path: 'installments', element: <InstallmentsPage /> },
           { path: 'verify', element: <VerifyIdentityPage /> },
+          { path: 'rewards', element: <RewardsPage /> },
+          { path: 'support', element: <SupportPage /> },
+          { path: 'support/:id', element: <SupportPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
@@ -80,6 +88,7 @@ export const routes: RouteObject[] = [
       { path: 'orders', element: <RequireAuth roles={['operations', 'support']}><AdminOrders /></RequireAuth> },
       { path: 'orders/:id', element: <RequireAuth roles={['operations', 'support']}><AdminOrderDetail /></RequireAuth> },
       { path: 'collections', element: <RequireAuth roles={['collections']}><AdminCollections /></RequireAuth> },
+      { path: 'support', element: <RequireAuth roles={['support']}><AdminSupport /></RequireAuth> },
       { path: 'rider', element: <RequireAuth roles={['delivery']}><RiderQueue /></RequireAuth> },
       { path: 'products', element: <RequireAuth roles={['operations']}><AdminProducts /></RequireAuth> },
       { path: 'products/:id', element: <RequireAuth roles={['operations']}><AdminProductEdit /></RequireAuth> },

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Copy, Gift, Heart, MapPin, UserRound } from 'lucide-react'
+import { CalendarClock, Copy, Gift, Heart, LifeBuoy, MapPin, Package, UserRound } from 'lucide-react'
 import { PageTitle } from '@/components/ui/misc'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
@@ -26,6 +26,21 @@ export function AccountOverview() {
     <>
       <PageTitle title={first ? `Hello, ${first}` : 'My account'} subtitle={user?.email ?? user?.phone ?? undefined} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Link to="/account/orders" className="card p-5 hover:border-gold-500">
+          <Package className="size-6 text-gold-600" />
+          <p className="mt-3 font-semibold text-navy-900">Orders</p>
+          <p className="text-sm text-navy-700">Track deliveries and see your delivery code</p>
+        </Link>
+        <Link to="/account/installments" className="card p-5 hover:border-gold-500">
+          <CalendarClock className="size-6 text-gold-600" />
+          <p className="mt-3 font-semibold text-navy-900">Installments</p>
+          <p className="text-sm text-navy-700">Monthly payment plans and what is due</p>
+        </Link>
+        <Link to="/account/rewards" className="card p-5 hover:border-gold-500">
+          <Gift className="size-6 text-gold-600" />
+          <p className="mt-3 font-semibold text-navy-900">Rewards</p>
+          <p className="text-sm text-navy-700">Points, coupons and friends you invited</p>
+        </Link>
         <Link to="/account/profile" className="card p-5 hover:border-gold-500">
           <UserRound className="size-6 text-gold-600" />
           <p className="mt-3 font-semibold text-navy-900">Profile</p>
@@ -40,6 +55,11 @@ export function AccountOverview() {
           <Heart className="size-6 text-gold-600" />
           <p className="mt-3 font-semibold text-navy-900">Wishlist</p>
           <p className="text-sm text-navy-700">{wish?.size ? `${wish.size} saved item${wish.size === 1 ? '' : 's'}` : 'Nothing saved yet'}</p>
+        </Link>
+        <Link to="/account/support" className="card p-5 hover:border-gold-500">
+          <LifeBuoy className="size-6 text-gold-600" />
+          <p className="mt-3 font-semibold text-navy-900">Help</p>
+          <p className="text-sm text-navy-700">Ask about an order, return or payment</p>
         </Link>
       </div>
       {profile && (

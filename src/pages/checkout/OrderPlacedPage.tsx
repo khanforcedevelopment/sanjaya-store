@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Clock } from 'lucide-react'
 import { Alert, Badge, EmptyState, Skeleton } from '@/components/ui/misc'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { startPayment } from '@/features/payments/startPayment'
-import { requireSupabase, supabase } from '@/lib/supabase'
+import { requireSupabase, supabase, friendlyError } from '@/lib/supabase'
 import { formatINR } from '@/lib/money'
 import { formatDateTime, formatDeliveryWindow } from '@/lib/format'
 import { STATUS_LABEL, statusTone } from '@/lib/orderStatus'
 import { useDocumentMeta } from '@/lib/meta'
 import { OrderTracking } from '@/features/orders/OrderTracking'
+
+/** Statuses from which the customer may cancel (matches order_status_transitions). */
+const CUSTOMER_CANCEL: string[] = ['payment_pending', 'awaiting_approval', 'order_confirmed']
 
 export function useOrder(id: string | undefined, poll = false) {
   return useQuery({
@@ -38,6 +41,16 @@ export function OrderPlacedPage() {
     try { await startPayment(id!) } catch (e) { setPayError((e as Error).message); setPaying(false) }
   }
   useDocumentMeta({ title: o ? `Order ${o.order_number}` : 'Order', noindex: true })
+  const qc = useQueryClient()
+  const [cancelling, setCancelling] = useState(false)
+  const cancel = async () => {
+    const reason = window.prompt('Cancel this order? Tell us why (optional):')
+    if (reason === null) return
+    setCancelling(true); setPayError(null)
+    const { error } = await requireSupabase().rpc('cancel_my_order', { p_order: id!, p_reason: reason || undefined })
+    setCancelling(false)
+    if (error) setPayError(friendlyError(error)); else qc.invalidateQueries({ queryKey: ['order', id] })
+  }
 
   if (isLoading) return <div className="container-x py-10"><Skeleton className="h-64" /></div>
   if (!o) return <div className="container-x py-10"><EmptyState title="Order not found">This order does not exist or belongs to another account.</EmptyState></div>
@@ -105,7 +118,12 @@ export function OrderPlacedPage() {
           </ol>
         </div>
       </div>
-      <div className="mt-8 flex justify-center gap-3"><ButtonLink to="/" variant="outline">Continue shopping</ButtonLink></div>
+      {payError && o.status !== 'payment_pending' && <div className="mt-6"><Alert tone="error">{payError}</Alert></div>}
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <ButtonLink to="/" variant="outline">Continue shopping</ButtonLink>
+        <ButtonLink to={`/account/support?order=${o.id}`} variant="ghost">Get help with this order</ButtonLink>
+        {CUSTOMER_CANCEL.includes(o.status) && <Button variant="ghost" className="text-danger" loading={cancelling} onClick={cancel}>Cancel order</Button>}
+      </div>
     </div>
   )
 }
