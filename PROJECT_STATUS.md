@@ -1,11 +1,11 @@
 # Sanjaya Store: Project Status
 
-Last updated: 2026-11-03 · Current phase: **1 of 20, complete, awaiting approval**
+Last updated: 2026-11-03 · Building all phases continuously (owner approved on 2026-11-03: no stop between phases, merge when tests pass)
 
 | Phase | Name | Status |
 |---|---|---|
-| 1 | New project initialization | ✅ Done, awaiting approval |
-| 2 | Database and backend architecture | ⏸ Waiting for Phase 1 approval |
+| 1 | New project initialization | ✅ Done, merged |
+| 2 | Database and backend architecture | ✅ Done |
 | 3 | VIP branding and homepage | Not started |
 | 4 | Product catalogue | Not started |
 | 5 | Customer authentication | Not started |
@@ -24,6 +24,34 @@ Last updated: 2026-11-03 · Current phase: **1 of 20, complete, awaiting approva
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 2 report: database and backend
+
+### Features completed
+
+- Full PostgreSQL schema for every phase (41 tables): identity, staff roles, addresses, catalogue, delivery zones and pincodes, coupons, banners, orders and timeline, payments, refunds, Stripe event log, delivery assignments/attempts/proof, installments, collections, KYC, referrals, rewards, loyalty, notifications, support tickets, audit log.
+- Row Level Security on every table; roles Super Admin, Operations, Delivery, Collections, Support (see docs/DATABASE.md for the permission table).
+- Server-side business logic as database functions: checkout quote, order placement with stock reservation, first-order-free delivery, ₹50 fee, pincode zones, coupons, order lifecycle with Super Admin approval, delivery with door code, payment recording with amount checks, refunds, unpaid-order expiry, six-installment schedules, eligibility rules, collections, KYC auto-decision with duplicate detection, Invite-5 rewards, loyalty points, verified reviews, notification queue, admin dashboard numbers.
+- Scheduled jobs (pg_cron) for order expiry and installment reminders.
+- CI workflow that runs web checks and the database tests on every pull request.
+
+### Database changes
+
+Seven migrations in `supabase/migrations/` (listed in docs/DATABASE.md). Not yet applied to a real Supabase project (needs your Supabase account, see USER_TODO.md).
+
+### Tests performed
+
+121 database assertions (`npm run test:db`) on PostgreSQL 16 with a Supabase auth stand-in, acting as visitors, customers, each staff role and the server. They cover pricing, zones, free first delivery, coupons, stock, payments (including wrong amounts and webhook replays), approval rights, rider restrictions, door codes, expiry, refunds, installments, overdue collections, KYC duplicates, referral gifts, loyalty, reviews and data privacy between customers and staff.
+
+### Errors
+
+None outstanding.
+
+### Deployment status
+
+Nothing to deploy on Netlify. Supabase deployment waits for your account.
 
 ---
 
