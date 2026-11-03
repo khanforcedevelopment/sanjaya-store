@@ -78,6 +78,13 @@ The website never sees a Stripe secret. Three server functions run on Supabase: 
 5. Test with card `4242 4242 4242 4242`, any future date, any CVC. The order should move to "Awaiting approval" within seconds.
 6. **Live mode stays blocked by the code**: with an `sk_live_` key, payments are refused until the Super Admin switches on *Settings → Payments → Live payments*. Do this only after Stripe confirms in writing that the UAE account may sell to Indian customers, and after the owner's final approval.
 
+## E2. Identity checks and mobile verification (Phase 16)
+
+1. Deploy the function: `supabase functions deploy kyc-submit`.
+2. Set one more secret: `KYC_HASH_SALT` = a long random value (for example the output of `openssl rand -hex 32`). It turns ID numbers into fingerprints for duplicate detection. **Never change it after launch**, or duplicates can no longer be detected. Do not share it.
+3. Supabase → Authentication → Sign In / Providers → **Phone**: turn on **Confirm phone** so a mobile number counts as verified only after the SMS code. Connect an SMS provider (USER_TODO, paid). Until then customers cannot verify a mobile number, so they cannot use installments.
+4. The `kyc-documents` storage bucket is private. Customers can upload only into their own folder and cannot read files back; only the Super Admin can view them (Admin → Identity checks).
+
 ## F. Connecting your domain (Phase 20, only with your approval)
 
 The old produce website currently runs on sanjayatrading.store. The new site stays on its `.netlify.app` address until you approve the switch at launch. Then: Netlify → **Domain management → Add a domain**, and follow Netlify's DNS instructions at your domain registrar. Netlify issues the HTTPS certificate automatically.

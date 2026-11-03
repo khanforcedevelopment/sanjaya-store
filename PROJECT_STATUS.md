@@ -19,11 +19,34 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 13 | Super Admin dashboard | ✅ Done, merged |
 | 14 | Staff role management | ✅ Done, merged |
 | 15 | Six-installment system | ✅ Done, merged (test mode; live blocked until legal review) |
-| 16 | KYC and automatic eligibility | Not started |
+| 16 | KYC and automatic eligibility | ✅ Done, merged (document review; automatic provider optional later) |
 | 17 | Customer dashboard | Not started |
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 16 report: identity check (KYC) and automatic eligibility
+
+### Features completed
+- **My account → Verify identity**: customer picks PAN, passport, driving licence or voter ID, enters the number and name, uploads the document photo (back optional) and a selfie holding it, and agrees to the check. Status shows "Documents received", "Identity verified" or "Not approved" with the reason.
+- **No Aadhaar** is collected: only licensed e-KYC providers may process Aadhaar numbers.
+- **Privacy**: the document number is never stored. The server function `kyc-submit` turns it into a fingerprint with a secret key (to block one ID on many accounts) and keeps only the last 4 characters. Photos are in a private bucket that only the Super Admin can open, through links that expire after 5 minutes.
+- **Admin → Identity checks** (Super Admin): photos, document type, last 4, name; Approve or Reject with a reason (audited, customer emailed). Duplicate IDs are rejected automatically.
+- **Verified mobile**: Profile has "Verify your mobile number" with an SMS code. Phone confirmation is now required in the auth settings, so a number counts only after the code.
+- **Automatic eligibility**: once mobile and identity are verified, installments unlock straight away at checkout and on /installments (rules from Settings: account age, active plans, overdue installments, order amount).
+
+### Database changes
+- `20261103001300_kyc.sql`: `kyc_applications` gets `document_last4`, `document_paths`, `consent_at`; private `kyc-documents` bucket with own-folder upload and Super Admin read; server-only `register_manual_kyc` (format, own-folder files, one review at a time, 3 tries a day, duplicate detection). KYC provider setting is now `manual`.
+
+### Tests run
+- Database tests: 161 assertions pass (new: server-only, no Aadhaar, own-folder files, one review at a time, duplicate rejected).
+- Browser test on local Supabase: verify mobile with SMS code → wrong PAN format refused → documents submitted, row stores a 64-character fingerprint and last 4 only, the PAN itself appears nowhere → a second account with the same PAN is rejected as duplicate → Super Admin sees both photos, must write a reason, approves → customer is immediately eligible for installments. No browser errors.
+
+### Next requirements (you)
+- Set the `KYC_HASH_SALT` secret and turn on **Confirm phone** in Supabase (DEPLOYMENT.md section E2).
+- An SMS provider is needed before customers can verify their mobile (USER_TODO, paid).
 
 ---
 
