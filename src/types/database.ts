@@ -335,14 +335,14 @@ isOneToOne: false
                   ]
                 },"kyc_applications": {
                   Row: {
-                    "created_at": string,"decided_at": string | null,"decided_by": string | null,"decision_reasons": (string)[],"document_number_hash": string | null,"document_type": string | null,"face_match_score": number | null,"id": string,"liveness_passed": boolean | null,"name_on_document": string | null,"provider": string,"provider_reference": string | null,"risk_flags": (string)[],"status": Database["public"]['Enums']["kyc_status"],"updated_at": string,"user_id": string
+                    "consent_at": string | null,"created_at": string,"decided_at": string | null,"decided_by": string | null,"decision_reasons": (string)[],"document_last4": string | null,"document_number_hash": string | null,"document_paths": (string)[],"document_type": string | null,"face_match_score": number | null,"id": string,"liveness_passed": boolean | null,"name_on_document": string | null,"provider": string,"provider_reference": string | null,"risk_flags": (string)[],"status": Database["public"]['Enums']["kyc_status"],"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_reasons"?: (string)[],"document_number_hash"?: string | null,"document_type"?: string | null,"face_match_score"?: number | null,"id"?: string,"liveness_passed"?: boolean | null,"name_on_document"?: string | null,"provider": string,"provider_reference"?: string | null,"risk_flags"?: (string)[],"status"?: Database["public"]['Enums']["kyc_status"],"updated_at"?: string,"user_id": string
+                    "consent_at"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_reasons"?: (string)[],"document_last4"?: string | null,"document_number_hash"?: string | null,"document_paths"?: (string)[],"document_type"?: string | null,"face_match_score"?: number | null,"id"?: string,"liveness_passed"?: boolean | null,"name_on_document"?: string | null,"provider": string,"provider_reference"?: string | null,"risk_flags"?: (string)[],"status"?: Database["public"]['Enums']["kyc_status"],"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_reasons"?: (string)[],"document_number_hash"?: string | null,"document_type"?: string | null,"face_match_score"?: number | null,"id"?: string,"liveness_passed"?: boolean | null,"name_on_document"?: string | null,"provider"?: string,"provider_reference"?: string | null,"risk_flags"?: (string)[],"status"?: Database["public"]['Enums']["kyc_status"],"updated_at"?: string,"user_id"?: string
+                    "consent_at"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decision_reasons"?: (string)[],"document_last4"?: string | null,"document_number_hash"?: string | null,"document_paths"?: (string)[],"document_type"?: string | null,"face_match_score"?: number | null,"id"?: string,"liveness_passed"?: boolean | null,"name_on_document"?: string | null,"provider"?: string,"provider_reference"?: string | null,"risk_flags"?: (string)[],"status"?: Database["public"]['Enums']["kyc_status"],"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -1167,6 +1167,9 @@ isOneToOne: false
                            },
 "refresh_installment_statuses":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"register_manual_kyc":
+{ Args: { "p_document_last4": string,"p_document_number_hash": string,"p_document_type": string,"p_name_on_document": string,"p_paths": (string)[],"p_user": string }; Returns: Json
                            },
 "remove_demo_products":
 { Args: Record<PropertyKey, never>; Returns: Json

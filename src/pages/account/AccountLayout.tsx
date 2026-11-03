@@ -9,6 +9,7 @@ const LINKS = [
   { to: '/account/addresses', label: 'Addresses', icon: MapPin },
   { to: '/account/wishlist', label: 'Wishlist', icon: Heart },
   { to: '/account/installments', label: 'Installments', icon: CalendarClock },
+  { to: '/account/verify', label: 'Verify identity', icon: ShieldCheck },
 ]
 
 export function AccountLayout() {

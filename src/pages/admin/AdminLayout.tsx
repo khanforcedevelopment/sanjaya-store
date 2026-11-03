@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { BarChart3, Bike, Boxes, CalendarClock, FileUp, Megaphone, PackageCheck, Settings, Truck, Users } from 'lucide-react'
+import { BarChart3, Bike, Boxes, CalendarClock, IdCard, FileUp, Megaphone, PackageCheck, Settings, Truck, Users } from 'lucide-react'
 import { useAuth } from '@/features/account/AuthProvider'
 import { Wordmark } from '@/components/brand/Logo'
 import type { AppRole } from '@/lib/types'
@@ -15,6 +15,7 @@ const NAV: { to: string; label: string; icon: typeof BarChart3; roles: AppRole[]
   { to: '/admin/import', label: 'Import', icon: FileUp, roles: ['operations'] },
   { to: '/admin/marketing', label: 'Banners & coupons', icon: Megaphone, roles: ['operations'] },
   { to: '/admin/delivery', label: 'Delivery zones', icon: Truck, roles: ['operations'] },
+  { to: '/admin/kyc', label: 'Identity checks', icon: IdCard, roles: ['super_admin'] },
   { to: '/admin/staff', label: 'Staff', icon: Users, roles: ['super_admin'] },
   { to: '/admin/settings', label: 'Settings', icon: Settings, roles: ['super_admin'] },
 ]

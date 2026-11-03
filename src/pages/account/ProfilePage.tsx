@@ -7,6 +7,7 @@ import { useAuth } from '@/features/account/AuthProvider'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
 import { normaliseIndianMobile } from '@/lib/phone'
 import { useDocumentMeta } from '@/lib/meta'
+import { VerifyMobile } from '@/features/account/VerifyMobile'
 
 export function ProfilePage() {
   useDocumentMeta({ title: 'Profile', noindex: true })
@@ -48,6 +49,10 @@ export function ProfilePage() {
         {error && <Alert tone="error">{error}</Alert>}
         <Button type="submit" loading={busy}>Save changes</Button>
       </form>
+      <section className="card mt-6 max-w-xl p-6">
+        <h2 className="mb-3 font-semibold text-navy-900">Verified mobile</h2>
+        <VerifyMobile />
+      </section>
     </>
   )
 }
