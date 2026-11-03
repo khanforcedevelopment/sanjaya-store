@@ -8,8 +8,8 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 2 | Database and backend architecture | ✅ Done, merged |
 | 3 | VIP branding and homepage | ✅ Done, merged |
 | 4 | Product catalogue | ✅ Done, merged |
-| 5 | Customer authentication | ✅ Done |
-| 6 | Cart and checkout | Not started |
+| 5 | Customer authentication | ✅ Done, merged |
+| 6 | Cart and checkout | ✅ Done (card payment connects in Phase 9) |
 | 7 | Delivery charges and serviceability | Not started |
 | 8 | Customer GPS address | Not started |
 | 9 | Stripe integration | Not started |
@@ -24,6 +24,29 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 6 report: cart and checkout
+
+### Features completed
+- Bag page (`/cart`): change quantity, remove, live server prices with MRP, stock warnings, delivery pincode check, coupon codes, delivery fee (free on the first order, then ₹50), estimated delivery dates.
+- Checkout (`/checkout`, sign-in required): pick a saved address or add one (saved to the address book), serviceability check per address, coupon, note for the team, place order. The server re-prices everything, checks stock and reserves it, and records the coupon.
+- Order placed page (`/order/:id`): order number, status, items, totals, address, payment deadline and next steps.
+- Payment: "Pay in full by card". The Stripe payment page itself is connected in Phase 9; until then orders stay "Payment pending" and are released automatically after 60 minutes.
+
+### Files
+- `src/pages/CartPage.tsx`, `src/pages/checkout/{CheckoutPage,OrderPlacedPage}.tsx`, `src/features/cart/OrderSummary.tsx`, `src/app/router.tsx`.
+
+### Database changes
+- None (uses `quote_cart` and `place_order` from Phase 2).
+
+### Tests run
+- Web checks and database tests pass.
+- Browser test against local Supabase: add a watch → bag → pincode 400050 → coupon WELCOME10 (−₹1,000) → sign in by email code → new address → place order → order SNJ100001 "Payment pending", first delivery free. Second order by the same customer correctly charges ₹50 delivery. Phone layout checked (no sideways scroll), no console errors.
+
+### Next requirements
+- None from you for this phase.
 
 ---
 

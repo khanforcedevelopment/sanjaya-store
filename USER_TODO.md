@@ -6,7 +6,7 @@ Last updated: 2026-11-03
 
 ## 1. Accounts to create (free to start)
 
-- [ ] **Supabase** (database and server). Sign up at supabase.com, create a project named `sanjaya-store`, region **South Asia (Mumbai)**. Save the database password in a password manager. Then invite the developer to the organisation (Organization → Team → Invite), or share only the **Project URL** and **anon public key**. Never share the service_role key or the database password in chat.
+- [ ] **Supabase** (database and server) — **needed for products to appear on the live site.** Sign up at supabase.com, create a project named `sanjaya-store`, region **South Asia (Mumbai)**, save the database password in a password manager. Then create an access token (Account → Access Tokens) and add it in Claude's Project settings → Cloud environment → Add cloud environment as `SUPABASE_ACCESS_TOKEN`, plus `SUPABASE_PROJECT_REF` (the first part of your project URL). Never paste tokens or passwords in chat. Claude then creates the tables, loads the products and connects the website.
 - [ ] **Stripe test mode**. In your existing Stripe UAE dashboard, switch on "Test mode". Nothing else yet.
 - [x] ~~Decide where the new store lives on Netlify.~~ Decided: use the **existing** Netlify site and domain. Work stays on a separate branch; you preview it on the PR's Netlify preview link. At launch, with your OK, it is merged and goes live on sanjayatrading.store.
 
