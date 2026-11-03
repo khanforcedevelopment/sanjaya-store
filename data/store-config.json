@@ -1,8 +1,0 @@
-{
-  "_note": "Store settings. Amounts in AED. These are used by BOTH the website and the secure payment function.",
-  "currency": "AED",
-  "minOrder": 2,
-  "deliveryFee": 0,
-  "freeDeliveryOver": 0,
-  "deliveryAreas": ["Ajman", "Sharjah", "Dubai", "Umm Al Quwain", "Ras Al Khaimah", "Abu Dhabi", "Al Ain", "Fujairah"]
-}

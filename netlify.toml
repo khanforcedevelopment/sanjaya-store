@@ -1,24 +1,8 @@
+# Used only when the site is connected to Netlify through GitHub.
+# For drag-and-drop, the same rules ship inside dist/ (public/_redirects, public/_headers).
 [build]
-  publish = "."
-  functions = "netlify/functions"
+  command = "npm ci && npm run build"
+  publish = "dist"
 
-[functions]
-  node_bundler = "esbuild"
-  included_files = ["data/*.json"]
-
-[[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-[[headers]]
-  for = "/data/*"
-  [headers.values]
-    Cache-Control = "public, max-age=60"
+[build.environment]
+  NODE_VERSION = "22"
