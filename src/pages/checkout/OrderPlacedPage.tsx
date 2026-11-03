@@ -10,6 +10,7 @@ import { formatINR } from '@/lib/money'
 import { formatDateTime, formatDeliveryWindow } from '@/lib/format'
 import { STATUS_LABEL, statusTone } from '@/lib/orderStatus'
 import { useDocumentMeta } from '@/lib/meta'
+import { OrderTracking } from '@/features/orders/OrderTracking'
 
 export function useOrder(id: string | undefined, poll = false) {
   return useQuery({
@@ -64,6 +65,7 @@ export function OrderPlacedPage() {
       {['payment_confirmed', 'awaiting_approval'].includes(o.status) && (
         <div className="mt-6"><Alert tone="success" title="Payment received">Thank you! Our team will now check and approve your order.</Alert></div>
       )}
+      {o.status !== 'payment_pending' && o.status !== 'order_placed' && <OrderTracking order={o} />}
       <div className="card mt-6 divide-y divide-navy-100">
         {o.order_items.map((i) => (
           <div key={i.id} className="flex items-center gap-4 p-4">

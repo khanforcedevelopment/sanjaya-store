@@ -7,6 +7,7 @@ Last updated: 2026-11-03
 ## 1. Accounts to create (free to start)
 
 - [ ] **Supabase** (database and server) — **needed for products to appear on the live site.** Sign up at supabase.com, create a project named `sanjaya-store`, region **South Asia (Mumbai)**, save the database password in a password manager. Then create an access token (Account → Access Tokens) and add it in Claude's Project settings → Cloud environment → Add cloud environment as `SUPABASE_ACCESS_TOKEN`, plus `SUPABASE_PROJECT_REF` (the first part of your project URL). Never paste tokens or passwords in chat. Claude then creates the tables, loads the products and connects the website.
+- [ ] **Become Super Admin** (after the live database is set up). Sign in once on sanjayatrading.store with your email, then in Supabase → SQL editor run `select public.grant_initial_super_admin('your@email.com');` (or ask Claude to do it). Open sanjayatrading.store/admin; from the **Staff** page you can give roles to your team (they must sign in once first).
 - [ ] **Stripe test mode**. In your Stripe UAE dashboard switch on "Test mode". After Supabase is set up, follow DEPLOYMENT.md section E (about 10 minutes): add the webhook and save the two test keys as Supabase secrets. Payments then work with Stripe test cards; no real money moves.
 - [x] ~~Decide where the new store lives on Netlify.~~ Decided: use the **existing** Netlify site and domain. Work stays on a separate branch; you preview it on the PR's Netlify preview link. At launch, with your OK, it is merged and goes live on sanjayatrading.store.
 
