@@ -9,9 +9,9 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 3 | VIP branding and homepage | ✅ Done, merged |
 | 4 | Product catalogue | ✅ Done, merged |
 | 5 | Customer authentication | ✅ Done, merged |
-| 6 | Cart and checkout | ✅ Done (card payment connects in Phase 9) |
-| 7 | Delivery charges and serviceability | Not started |
-| 8 | Customer GPS address | Not started |
+| 6 | Cart and checkout | ✅ Done, merged (card payment connects in Phase 9) |
+| 7 | Delivery charges and serviceability | ✅ Done |
+| 8 | Customer GPS address | ✅ Done |
 | 9 | Stripe integration | Not started |
 | 10 | Order approval system | Not started |
 | 11 | In-house delivery management | Not started |
@@ -24,6 +24,28 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phases 7 + 8 report: delivery and GPS address
+
+### Features completed
+- Delivery page (`/delivery`): pincode checker with zone, typical days and arrival dates; delivery-time table per zone (Mumbai/Thane/Navi Mumbai 2–3 days, Maharashtra & metros 3–5, rest of India 5–7, remote areas 10–13); fee rule (first order free, then ₹50, from admin settings); delivery-code and map-pin explainers.
+- Delivery rules (built in Phase 2 and used everywhere): pincode serviceability, zone by exact pincode or prefix, remote flag, per-zone fee override, first-order-free that is released again if an unpaid order expires or is cancelled.
+- GPS address (optional, with consent): "Use my current location" in the address form asks the browser only when tapped, shows an OpenStreetMap map with a draggable gold pin, and fills street/city/state/pincode from OpenStreetMap's free address lookup when those fields are empty. Coordinates are saved with the address and copied onto the order for the rider. "Remove pin" clears it. If location is declined, the customer simply types the address.
+
+### Files
+- `src/pages/DeliveryPage.tsx`, `src/features/delivery/{LocationPicker.tsx,MapPin.tsx,geocode.ts,geocode.test.ts}`, `src/features/account/AddressForm.tsx`, `src/app/router.tsx`. The map code loads only when a customer opens it.
+
+### Database changes
+- None.
+
+### Tests run
+- Web checks (31 unit tests) and database tests pass.
+- Browser test: remote pincode 781001 shows 10–13 days; signed-in customer pins location (simulated GPS 19.0596, 72.8295 in Bandra), saves the address, and the database stores the coordinates with source "gps". The test machine has no internet for map tiles, so the map was grey there and the address lookup was skipped, which is the designed fallback.
+
+### Notes
+- OpenStreetMap tiles and address lookup are free for low traffic and need no account. If traffic grows a lot, switch to a paid map provider (listed in USER_TODO).
 
 ---
 
