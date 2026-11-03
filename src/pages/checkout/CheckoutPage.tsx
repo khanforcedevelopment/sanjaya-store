@@ -13,6 +13,7 @@ import { toLines } from '@/features/cart/cartStore'
 import { useQuote } from '@/features/cart/useQuote'
 import { OrderSummary } from '@/features/cart/OrderSummary'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
+import { startPayment } from '@/features/payments/startPayment'
 import { formatINR } from '@/lib/money'
 import { useDocumentMeta } from '@/lib/meta'
 import type { AddressInput, PlacedOrder } from '@/lib/types'
@@ -49,7 +50,11 @@ export function CheckoutPage() {
       if (error) throw error
       return data as unknown as PlacedOrder
     },
-    onSuccess: (o) => { clear(); navigate(`/order/${o.order_id}`, { replace: true }) },
+    onSuccess: async (o) => {
+      clear()
+      // Go straight to Stripe; if that fails the order page offers "Pay now" again.
+      try { await startPayment(o.order_id) } catch { navigate(`/order/${o.order_id}?payment=retry`, { replace: true }) }
+    },
     onError: (e) => setError(friendlyError(e)),
   })
 

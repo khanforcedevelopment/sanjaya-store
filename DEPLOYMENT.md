@@ -67,10 +67,16 @@ Instead of drag and drop, Netlify can rebuild the site every time code is merged
 
 ## E. Stripe setup (Phase 9)
 
-1. Use **test mode** first (toggle in the Stripe dashboard).
-2. Stripe → Developers → Webhooks → add endpoint: `https://YOUR-PROJECT-REF.supabase.co/functions/v1/stripe-webhook`. Exact events will be listed in the Phase 9 report.
-3. Give the secret key and webhook signing secret to the developer to store with `supabase secrets set`. Never paste them into the website, an email, or a chat.
-4. Live mode is switched on only after Stripe confirms the UAE account may sell to India, and after your final approval.
+The website never sees a Stripe secret. Three server functions run on Supabase: `create-checkout` (opens Stripe's payment page), `stripe-webhook` (Stripe tells us a payment succeeded, expired or was refunded) and `admin-refund` (Super Admin refunds).
+
+1. Stripe dashboard → switch on **Test mode**. Developers → API keys: note the **test secret key** (`sk_test_…`).
+2. Deploy the functions (developer): `supabase functions deploy create-checkout stripe-webhook admin-refund`.
+3. Stripe → Developers → Webhooks → **Add endpoint**: `https://YOUR-PROJECT-REF.supabase.co/functions/v1/stripe-webhook`, with these events:
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `refund.created`, `refund.updated`. Copy the **signing secret** (`whsec_…`).
+4. Store the secrets on Supabase (Supabase → Edge Functions → Secrets, or `supabase secrets set`):
+   `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SITE_URL=https://sanjayatrading.store`, `ALLOWED_ORIGINS=https://sanjayatrading.store`. Never paste them into the website, an email or a chat.
+5. Test with card `4242 4242 4242 4242`, any future date, any CVC. The order should move to "Awaiting approval" within seconds.
+6. **Live mode stays blocked by the code**: with an `sk_live_` key, payments are refused until the Super Admin switches on *Settings → Payments → Live payments*. Do this only after Stripe confirms in writing that the UAE account may sell to Indian customers, and after the owner's final approval.
 
 ## F. Connecting your domain (Phase 20, only with your approval)
 
