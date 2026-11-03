@@ -1,23 +1,21 @@
 import { render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { SiteLayout } from '@/components/layout/SiteLayout'
-import { HomePage } from '@/pages/HomePage'
-import { NotFoundPage } from '@/pages/NotFoundPage'
+import { Providers } from './providers'
+import { routes } from './router'
 
-const routes = [
-  { element: <SiteLayout />, children: [{ index: true, element: <HomePage /> }, { path: '*', element: <NotFoundPage /> }] },
-]
+const renderAt = (path: string) =>
+  render(<Providers><RouterProvider router={createMemoryRouter(routes, { initialEntries: [path] })} /></Providers>)
 
-describe('routing', () => {
-  it('renders the home page', () => {
-    render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: ['/'] })} />)
-    expect(screen.getByRole('heading', { name: 'Sanjaya Store' })).toBeInTheDocument()
-    expect(screen.getByTestId('backend-status')).toHaveTextContent('not configured yet')
+describe('routing (no backend configured)', () => {
+  it('renders the home page with an opening-soon notice', async () => {
+    renderAt('/')
+    expect(await screen.findByRole('heading', { level: 1, name: /Luxury, delivered across India/ })).toBeInTheDocument()
+    expect(screen.getByText(/opening soon/i)).toBeInTheDocument()
   })
 
-  it('renders 404 for unknown deep links', () => {
-    render(<RouterProvider router={createMemoryRouter(routes, { initialEntries: ['/p/unknown'] })} />)
-    expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
+  it('renders 404 for unknown deep links', async () => {
+    renderAt('/nothing/here')
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
   })
 })
