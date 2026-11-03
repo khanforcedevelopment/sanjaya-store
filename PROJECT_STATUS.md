@@ -22,8 +22,32 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 16 | KYC and automatic eligibility | ✅ Done, merged (document review; automatic provider optional later) |
 | 17 | Customer dashboard | ✅ Done, merged |
 | 18 | Referrals and promotions | ✅ Done, merged |
-| 19 | PWA, notifications and SEO | Not started |
+| 19 | PWA, notifications and SEO | ✅ Done, merged (email sending needs a Resend key) |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 19 report: installable app, notifications, SEO and legal pages
+
+### Features completed
+- **Installable app (PWA)**: web app manifest, navy-and-gold app icons (including Android "maskable" and iPhone icons), standalone display, shortcuts to My orders and Deals. A service worker makes repeat visits fast and shows the store (or a branded offline page) without internet. It never stores account, payment or API data. `/install` has an Install button on Android/Chrome and step-by-step help on iPhone.
+- **Email notifications**: order updates at every customer-visible step (with the delivery-code reminder at dispatch), installment reminders, identity-check results, support replies and referral rewards, as branded emails. The `dispatch-notifications` server function sends queued emails through Resend every 5 minutes, retries up to 5 times and skips updates older than 2 days. Nothing is sent until the Resend key is added. WhatsApp messages are queued for when a provider is connected.
+- **SEO**: page titles and descriptions on every page, Open Graph tags for link previews, `robots.txt` (keeps account, checkout and staff pages out of search), a live `sitemap.xml` with every active product and category, and Google product data (price range in ₹, stock, brand, and rating only when real reviews exist).
+- **Legal and info pages**: Terms, Privacy (written for India's DPDP Act, including what the identity check stores), Returns & refunds, Shipping, About and Contact. Store name, addresses, phone, email, GSTIN and grievance officer come from Settings → Store details. Each policy shows a "being reviewed" note until the lawyer review.
+- **Returns**: customers can now "Request a return" on a delivered order within the return window (Settings → Returns, default 7 days).
+
+### Database changes
+- None.
+
+### Tests run
+- Production build served locally: service worker active, manifest valid (3 icons, standalone), all 7 info pages render with no sideways scroll on a phone, and offline navigation still shows the store.
+- Email dispatcher against a mock email service: a call without the service key is refused (403); without a Resend key it sends nothing; with a key it sent 50 queued emails and marked them sent. Sample email checked visually.
+- Sitemap function returns valid XML with 1,000+ product URLs. Product page structured data checked (INR price range, stock, brand, no rating without reviews).
+- Web checks (unit tests, build, secret scan) and 170 database assertions pass.
+
+### Next requirements (you)
+- Resend account and domain check, then two secrets and one cron job (DEPLOYMENT.md section E3).
+- Lawyer review of the policy pages; grievance officer and GSTIN in Settings.
 
 ---
 

@@ -85,6 +85,15 @@ The website never sees a Stripe secret. Three server functions run on Supabase: 
 3. Supabase → Authentication → Sign In / Providers → **Phone**: turn on **Confirm phone** so a mobile number counts as verified only after the SMS code. Connect an SMS provider (USER_TODO, paid). Until then customers cannot verify a mobile number, so they cannot use installments.
 4. The `kyc-documents` storage bucket is private. Customers can upload only into their own folder and cannot read files back; only the Super Admin can view them (Admin → Identity checks).
 
+## E3. Email notifications, sitemap and app install (Phase 19)
+
+1. Deploy: `supabase functions deploy dispatch-notifications sitemap`.
+2. **Email**: create a Resend account (free tier: 3,000 emails a month), verify the domain `sanjayatrading.store` (Resend shows the DNS records to add at your domain provider), create an API key, then set Supabase secrets `RESEND_API_KEY` and `EMAIL_FROM` (for example `Sanjaya Store <orders@sanjayatrading.store>`). Without these, nothing is sent and updates wait in the queue.
+3. **Schedule** sending: Supabase → Integrations → Cron → New job → type *Supabase Edge Function*, function `dispatch-notifications`, method POST, every 5 minutes (`*/5 * * * *`). Updates older than 2 days are skipped, so switching email on later does not flood customers.
+4. **Sitemap**: when the site is built with `VITE_SUPABASE_URL` set to the live project, `/sitemap.xml` is forwarded to the `sitemap` function automatically. Submit `https://sanjayatrading.store/sitemap.xml` in Google Search Console.
+5. **App install**: nothing to set up. The site has a web app manifest, icons and an offline page; Chrome on Android offers "Install app", iPhone users use Share → Add to Home Screen (see `/install`).
+6. WhatsApp updates are queued too but are only sent once a WhatsApp Business provider is connected (USER_TODO).
+
 ## F. Connecting your domain (Phase 20, only with your approval)
 
 The old produce website currently runs on sanjayatrading.store. The new site stays on its `.netlify.app` address until you approve the switch at launch. Then: Netlify → **Domain management → Add a domain**, and follow Netlify's DNS instructions at your domain registrar. Netlify issues the HTTPS certificate automatically.

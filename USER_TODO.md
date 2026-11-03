@@ -32,13 +32,15 @@ Last updated: 2026-11-03
 - [ ] Lawyer: whether the six-installment plan counts as lending under RBI rules (it may need a licensed NBFC or BNPL partner). Installments stay in **test mode only** until this is answered.
 - [ ] Indian address, GSTIN and a **Grievance Officer** name/email to show on the site (required by India's e-commerce rules).
 - [ ] Confirm the contact details shown on the site (currently the UAE phone/WhatsApp/email from the old site).
-- [ ] Review the draft Terms, Privacy, Returns and Installment Agreement pages Claude writes, with a lawyer.
+- [ ] Review the Terms, Privacy, Returns, Shipping and Installment pages (live at /policies/terms, /policies/privacy, /policies/returns, /policies/shipping and /installments) with a lawyer. Each shows a "being reviewed" note until you tell Claude to remove it.
+- [ ] Add the Grievance Officer name and contact in Staff → Settings → Store details (`grievance_officer`), and GSTIN when you have it.
+- [ ] After launch, submit `https://sanjayatrading.store/sitemap.xml` in Google Search Console.
 
 ## 4. Paid services (sign up only when that feature is needed)
 
 - [ ] **SMS OTP** for phone login **and for verifying mobile numbers (required for installments)**: MSG91 or Twilio (pay per SMS, roughly ₹0.20–0.50 each in India; India requires DLT registration of your sender ID and templates, which takes a few days).
 - [ ] **KYC provider (optional, later)**: identity checks already work for free by document upload and your review in Admin → Identity checks. An automatic provider (IDfy, HyperVerge or Digio; roughly ₹5–30 per check) adds instant decisions, selfie liveness and Aadhaar e-KYC. Only needed when volume grows.
-- [ ] **Email sending**: Resend or Postmark (free tier to start). Needed for login codes on the live site; Supabase's own mailer allows only a few emails per hour.
+- [ ] **Email sending**: Resend (free up to 3,000 emails a month, then about US$20/month). Needed for login codes and order updates on the live site; Supabase's own mailer allows only a few emails per hour. Steps: DEPLOYMENT.md section E3.
 - [ ] **WhatsApp Business** notifications: Meta Cloud API or a provider like Interakt/AiSensy.
 - [ ] **Supabase Pro** (about US$25/month) at launch so the database never pauses and has daily backups.
 - Maps use free OpenStreetMap tiles by default; no account needed unless traffic grows.

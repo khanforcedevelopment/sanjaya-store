@@ -40,6 +40,10 @@ const OrdersPage = lazy(() => import('@/pages/account/OrdersPage').then((m) => (
 const RewardsPage = lazy(() => import('@/pages/account/RewardsPage').then((m) => ({ default: m.RewardsPage })))
 const SupportPage = lazy(() => import('@/pages/account/SupportPage').then((m) => ({ default: m.SupportPage })))
 const AdminReferrals = lazy(() => import('@/pages/admin/AdminReferrals').then((m) => ({ default: m.AdminReferrals })))
+const PolicyPage = lazy(() => import('@/pages/info/Policies').then((m) => ({ default: m.PolicyPage })))
+const AboutPage = lazy(() => import('@/pages/info/AboutContact').then((m) => ({ default: m.AboutPage })))
+const ContactPage = lazy(() => import('@/pages/info/AboutContact').then((m) => ({ default: m.ContactPage })))
+const InstallPage = lazy(() => import('@/pages/info/AboutContact').then((m) => ({ default: m.InstallPage })))
 const RiderQueue = lazy(() => import('@/pages/admin/RiderQueue').then((m) => ({ default: m.RiderQueue })))
 
 /**
@@ -58,6 +62,10 @@ export const routes: RouteObject[] = [
       { path: 'p/:slug', element: <ProductPage /> },
       { path: 'delivery', element: <DeliveryPage /> },
       { path: 'installments', element: <InstallmentsInfoPage /> },
+      { path: 'policies/:slug', element: <PolicyPage /> },
+      { path: 'about', element: <AboutPage /> },
+      { path: 'contact', element: <ContactPage /> },
+      { path: 'install', element: <InstallPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'checkout', element: <RequireAuth><CheckoutPage /></RequireAuth> },
       { path: 'order/:id', element: <RequireAuth><OrderPlacedPage /></RequireAuth> },
