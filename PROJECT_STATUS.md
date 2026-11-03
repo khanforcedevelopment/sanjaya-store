@@ -23,7 +23,29 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 17 | Customer dashboard | ✅ Done, merged |
 | 18 | Referrals and promotions | ✅ Done, merged |
 | 19 | PWA, notifications and SEO | ✅ Done, merged (email sending needs a Resend key) |
-| 20 | Testing and Netlify launch | Not started |
+| 20 | Testing and Netlify launch | ✅ Done: full test pass, two-step sign-in, launch checklist. Real orders wait on your items in `docs/LAUNCH_CHECKLIST.md` |
+
+---
+
+## Phase 20 report: testing and launch
+
+### Features completed
+- **Two-step sign-in** (your request): password, then a 6-digit code emailed to the account. This is enforced on the server, so a password alone or a code alone never signs anyone in. Wrong passwords are limited to 5 per 15 minutes; "Forgot password" sends a code, then asks for a new password. Mobile sign-in was removed. Mobile numbers are still verified for installments.
+- **Full test pass** over every customer, staff and admin flow (see `docs/LAUNCH_CHECKLIST.md`, section F). One test was fixed: the support queue lists the oldest waiting ticket first, as designed.
+- **Server functions** now accept Supabase's new-style secret keys, which should fix the live sitemap error.
+- **Launch checklist** in `docs/LAUNCH_CHECKLIST.md`. ARCHITECTURE.md now describes the system as built.
+
+### Database changes
+- `20261103001600_login_two_step.sql`: login checks, rate limits and the access token hook.
+
+### Tests run
+- 33 unit tests, 184 database assertions (14 new for sign-in), build and secret scan.
+- Browser tests: sign-in (5 cases), admin and delivery, installments, identity check, dashboard and support, referrals, app install and SEO.
+
+### Next requirements (you)
+- Set your password with "Forgot password" on the login page.
+- Connect Resend, because every sign-in now sends an email.
+- The rest of `docs/LAUNCH_CHECKLIST.md`, sections B to E.
 
 ---
 
