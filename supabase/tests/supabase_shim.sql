@@ -5,6 +5,7 @@ do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin noinherit; end if;
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin noinherit; end if;
   if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin noinherit bypassrls; end if;
+  if not exists (select 1 from pg_roles where rolname = 'supabase_auth_admin') then create role supabase_auth_admin nologin noinherit; end if;
 end $$;
 
 create schema if not exists auth;
@@ -18,6 +19,9 @@ create table if not exists auth.users (
   phone_confirmed_at timestamptz,
   email_confirmed_at timestamptz,
   raw_user_meta_data jsonb not null default '{}'::jsonb,
+  encrypted_password text,
+  deleted_at timestamptz,
+  banned_until timestamptz,
   created_at timestamptz not null default now()
 );
 

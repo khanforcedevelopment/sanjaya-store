@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
-import { Mail, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { InputField } from '@/components/ui/Field'
 import { Alert } from '@/components/ui/misc'
@@ -8,11 +7,22 @@ import { Monogram } from '@/components/brand/Logo'
 import { useAuth } from '@/features/account/AuthProvider'
 import { clearReferral, storedReferral } from '@/features/account/referralCapture'
 import { requireSupabase, friendlyError, supabase } from '@/lib/supabase'
-import { normaliseIndianMobile } from '@/lib/phone'
 import { useDocumentMeta } from '@/lib/meta'
 import { cn } from '@/lib/cn'
 
-type Method = 'email' | 'phone'
+/**
+ * Sign-in is always two steps: password, then a 6-digit code emailed to the account.
+ * The server enforces it (see migration login_two_step): a password alone never gives a session.
+ */
+type Mode = 'signin' | 'signup' | 'reset'
+type Step = 'start' | 'code' | 'newpw'
+
+const MIN_PW = 8
+const LOGIN_ERRORS: Record<string, string> = {
+  invalid_credentials: 'Wrong email or password.',
+  email_not_confirmed: 'Please confirm your email first: create the account again with the same email to get a new code, or use "Forgot password".',
+  too_many_attempts: 'Too many attempts. Please wait a while and try again.',
+}
 
 export function LoginPage() {
   useDocumentMeta({ title: 'Sign in', noindex: true })
@@ -20,10 +30,11 @@ export function LoginPage() {
   const [sp] = useSearchParams()
   const next = safeNext(sp.get('next'))
   const navigate = useNavigate()
-  const [method, setMethod] = useState<Method>('email')
-  const [step, setStep] = useState<'start' | 'code'>('start')
+  const [mode, setMode] = useState<Mode>('signin')
+  const [step, setStep] = useState<Step>('start')
   const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
@@ -38,82 +49,148 @@ export function LoginPage() {
   }, [cooldown])
 
   if (!supabase) return <div className="container-x py-16"><Alert title="Sign-in opens soon">Accounts will be available when the store opens.</Alert></div>
-  if (ready && user) return <Navigate to={next} replace />
+  if (ready && user && step !== 'newpw') return <Navigate to={next} replace />
 
-  const target = method === 'email' ? email.trim().toLowerCase() : normaliseIndianMobile(phone)
+  const target = email.trim().toLowerCase()
+  const switchMode = (m: Mode) => { setMode(m); setStep('start'); setError(null); setCode('') }
 
-  const send = async (e?: FormEvent) => {
+  /** Step 1: check the password (or create the account / ask for a reset), which emails a code. */
+  const start = async (e?: FormEvent) => {
     e?.preventDefault()
     setError(null)
-    if (method === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(target ?? '')) return setError('Please enter a valid email address.')
-    if (method === 'phone' && !target) return setError('Please enter a valid 10-digit Indian mobile number.')
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(target)) return setError('Please enter a valid email address.')
+    if (mode !== 'reset' && password.length < MIN_PW) return setError(`Password must be at least ${MIN_PW} characters.`)
+    if (mode === 'signup' && name.trim().length < 2) return setError('Please enter your name.')
+    const db = requireSupabase()
     setBusy(true)
-    const data = { full_name: name.trim() || undefined, referral_code: referral ?? undefined }
-    const { error } = method === 'email'
-      ? await requireSupabase().auth.signInWithOtp({ email: target!, options: { shouldCreateUser: true, data } })
-      : await requireSupabase().auth.signInWithOtp({ phone: target!, options: { shouldCreateUser: true, data } })
-    setBusy(false)
-    if (error) return setError(friendlyError(error))
-    setStep('code')
-    setCooldown(30)
+    try {
+      if (mode === 'signin') {
+        const { data, error } = await db.rpc('start_password_login', { p_email: target, p_password: password })
+        if (error) return setError(friendlyError(error))
+        if (data !== 'ok') return setError(LOGIN_ERRORS[data as string] ?? 'Could not sign in. Please try again.')
+        const sent = await db.auth.signInWithOtp({ email: target, options: { shouldCreateUser: false } })
+        if (sent.error) return setError(friendlyError(sent.error))
+      } else if (mode === 'signup') {
+        const { data, error } = await db.auth.signUp({ email: target, password, options: { data: { full_name: name.trim(), referral_code: referral ?? undefined } } })
+        if (error) return setError(friendlyError(error))
+        if (data.user && data.user.identities?.length === 0) return setError('An account with this email already exists. Please sign in.')
+      } else {
+        const { data, error } = await db.rpc('start_password_reset', { p_email: target })
+        if (error) return setError(friendlyError(error))
+        if (data !== 'ok') return setError(LOGIN_ERRORS[data as string] ?? 'Could not send a code. Please try again.')
+        const sent = await db.auth.signInWithOtp({ email: target, options: { shouldCreateUser: false } })
+        if (sent.error) return setError(/signups not allowed/i.test(sent.error.message) ? 'No account uses this email. Please create an account.' : friendlyError(sent.error))
+      }
+      setStep('code')
+      setCooldown(30)
+    } finally {
+      setBusy(false)
+    }
   }
 
+  /** Step 2: the emailed code. */
   const verify = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     if (!/^\d{6}$/.test(code)) return setError('Enter the 6-digit code.')
     setBusy(true)
-    const { error } = method === 'email'
-      ? await requireSupabase().auth.verifyOtp({ email: target!, token: code, type: 'email' })
-      : await requireSupabase().auth.verifyOtp({ phone: target!, token: code, type: 'sms' })
+    const type = mode === 'signup' ? 'signup' : 'email'
+    if (mode === 'reset') setStep('newpw') // keep this page open once the reset code signs the user in
+    const { error } = await requireSupabase().auth.verifyOtp({ email: target, token: code, type })
     setBusy(false)
-    if (error) return setError(/expired|invalid/i.test(error.message) ? 'That code is wrong or has expired. Please try again.' : friendlyError(error))
+    if (error) {
+      if (mode === 'reset') setStep('code')
+      if (/password_required/.test(error.message)) { setStep('start'); setCode(''); return setError('That took too long. Please enter your password again.') }
+      return setError(/expired|invalid/i.test(error.message) ? 'That code is wrong or has expired. Please try again.' : friendlyError(error))
+    }
+    if (mode === 'reset') return
     clearReferral()
     navigate(next, { replace: true })
   }
+
+  /** Reset step 3: choose a new password. */
+  const savePassword = async (e: FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    if (newPassword.length < MIN_PW) return setError(`Password must be at least ${MIN_PW} characters.`)
+    setBusy(true)
+    const { error } = await requireSupabase().auth.updateUser({ password: newPassword })
+    setBusy(false)
+    if (error) return setError(friendlyError(error))
+    navigate(next, { replace: true })
+  }
+
+  const subtitle = mode === 'signup' ? 'Create your account. We will email you a code to confirm it.'
+    : mode === 'reset' ? 'We will email you a code to set a new password.'
+    : 'Sign in with your password, then the code we email you.'
 
   return (
     <div className="container-x grid min-h-[70vh] place-items-center py-12">
       <div className="card w-full max-w-md p-6 sm:p-8">
         <div className="flex flex-col items-center text-center">
           <Monogram className="size-14" />
-          <h1 className="mt-3 font-display text-3xl font-semibold text-navy-900">Welcome to Sanjaya</h1>
-          <p className="mt-1 text-sm text-navy-700">Sign in or create an account with a one-time code. No password needed.</p>
+          <h1 className="mt-3 font-display text-3xl font-semibold text-navy-900">
+            {mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Reset password' : 'Welcome back'}
+          </h1>
+          <p className="mt-1 text-sm text-navy-700">{subtitle}</p>
         </div>
 
-        {step === 'start' ? (
-          <form onSubmit={send} className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 gap-1 rounded-full bg-navy-50 p-1" role="tablist">
-              {(['email', 'phone'] as Method[]).map((m) => (
-                <button key={m} type="button" role="tab" aria-selected={method === m} onClick={() => { setMethod(m); setError(null) }}
-                  className={cn('flex items-center justify-center gap-2 rounded-full py-2 text-sm font-semibold', method === m ? 'bg-white text-navy-900 shadow' : 'text-navy-600')}>
-                  {m === 'email' ? <Mail className="size-4" /> : <Smartphone className="size-4" />}{m === 'email' ? 'Email' : 'Mobile'}
-                </button>
-              ))}
-            </div>
-            {method === 'email'
-              ? <InputField label="Email address" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              : <InputField label="Mobile number" type="tel" inputMode="tel" autoComplete="tel" placeholder="98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} hint="We will text you a 6-digit code." required />}
-            <InputField label="Your name (for new accounts)" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
-            {referral && <p className="text-xs text-success">Invite code {referral} will be applied to your new account.</p>}
+        {step === 'start' && (
+          <form onSubmit={start} className="mt-6 space-y-4">
+            {mode !== 'reset' && (
+              <div className="grid grid-cols-2 gap-1 rounded-full bg-navy-50 p-1" role="tablist">
+                {(['signin', 'signup'] as Mode[]).map((m) => (
+                  <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => switchMode(m)}
+                    className={cn('rounded-full py-2 text-sm font-semibold', mode === m ? 'bg-white text-navy-900 shadow' : 'text-navy-600')}>
+                    {m === 'signin' ? 'Sign in' : 'Create account'}
+                  </button>
+                ))}
+              </div>
+            )}
+            {mode === 'signup' && <InputField label="Your name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required />}
+            <InputField label="Email address" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            {mode !== 'reset' && (
+              <InputField label="Password" type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} value={password}
+                onChange={(e) => setPassword(e.target.value)} hint={mode === 'signup' ? `At least ${MIN_PW} characters.` : undefined} required />
+            )}
+            {mode === 'signup' && referral && <p className="text-xs text-success">Invite code {referral} will be applied to your new account.</p>}
             {error && <Alert tone="error">{error}</Alert>}
-            <Button type="submit" size="lg" className="w-full" loading={busy}>Send code</Button>
+            <Button type="submit" size="lg" className="w-full" loading={busy}>
+              {mode === 'signin' ? 'Continue' : mode === 'signup' ? 'Create account' : 'Send reset code'}
+            </Button>
+            <div className="text-center text-sm">
+              {mode === 'reset'
+                ? <button type="button" className="text-navy-700 hover:underline" onClick={() => switchMode('signin')}>Back to sign in</button>
+                : mode === 'signin' && <button type="button" className="font-semibold text-gold-700 hover:underline" onClick={() => switchMode('reset')}>Forgot password? (or first time setting one)</button>}
+            </div>
           </form>
-        ) : (
+        )}
+
+        {step === 'code' && (
           <form onSubmit={verify} className="mt-6 space-y-4">
-            <p className="text-center text-sm text-navy-700">We sent a 6-digit code to <strong>{method === 'email' ? email : target}</strong>.</p>
+            <p className="text-center text-sm text-navy-700">We emailed a 6-digit code to <strong>{target}</strong>.</p>
             <InputField label="Code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} className="[&_input]:text-center [&_input]:text-2xl [&_input]:tracking-[0.5em]" autoFocus />
             {error && <Alert tone="error">{error}</Alert>}
             <Button type="submit" size="lg" className="w-full" loading={busy}>Verify and continue</Button>
             <div className="flex justify-between text-sm">
-              <button type="button" className="text-navy-700 hover:underline" onClick={() => { setStep('start'); setCode('') }}>Change {method === 'email' ? 'email' : 'number'}</button>
-              <button type="button" className="font-semibold text-gold-700 disabled:text-navy-600/40" disabled={cooldown > 0 || busy} onClick={() => send()}>
+              <button type="button" className="text-navy-700 hover:underline" onClick={() => { setStep('start'); setCode(''); setError(null) }}>Back</button>
+              <button type="button" className="font-semibold text-gold-700 disabled:text-navy-600/40" disabled={cooldown > 0 || busy} onClick={() => start()}>
                 {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
               </button>
             </div>
           </form>
         )}
+
+        {step === 'newpw' && (
+          <form onSubmit={savePassword} className="mt-6 space-y-4">
+            <InputField label="New password" type="password" autoComplete="new-password" value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)} hint={`At least ${MIN_PW} characters.`} autoFocus required />
+            {error && <Alert tone="error">{error}</Alert>}
+            <Button type="submit" size="lg" className="w-full" loading={busy} disabled={!user}>Save password</Button>
+          </form>
+        )}
+
         <p className="mt-6 text-center text-xs text-navy-600/70">By continuing you agree to our <a href="/policies/terms" className="underline">Terms</a> and <a href="/policies/privacy" className="underline">Privacy Policy</a>.</p>
       </div>
     </div>
