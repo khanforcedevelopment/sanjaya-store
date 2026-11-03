@@ -73,4 +73,4 @@ The old produce website currently runs on sanjayatrading.store. The new site sta
 
 ## Where the old website went
 
-The old fruits and vegetables site is preserved in GitHub history on the `main` branch before the Phase 1 merge (tag `legacy-produce-site`). It is not used by the new store.
+The old fruits and vegetables site is preserved in GitHub history on the `main` branch before the Phase 1 merge (last commit `04552d0`, which can be restored from GitHub history at any time). It is not used by the new store.

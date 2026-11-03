@@ -34,7 +34,7 @@ Last updated: 2026-11-03 · Current phase: **1 of 20, complete, awaiting approva
 - Live and reachable. It is the old **fresh fruits and vegetables** site for Sanjaya Trading FZE (UAE).
 - Public details found: legal name Sanjaya Trading FZE; address Office BLV-6F-SF60793, Ajman Boulevard-A Building, Business District, Ajman Free Zone, UAE; phone and WhatsApp +971 56 911 0077; email admin@sanjayatrading.com. No licence number or social links shown.
 - Logo: gold crowned "ST" monogram with a green leaf and "SANJAYA TRADING FZE" wordmark. The leaf is produce-themed, so Phase 3 will propose a navy and gold mark for Sanjaya Store; the old files are kept in `public/brand/legacy/` for reference only.
-- **The old source code was found** in GitHub at `khanforcedevelopment/sanjaya-store` (a static HTML site with two Netlify Functions for Stripe). No secret keys were committed in it. None of its code or design was reused. Its last version is preserved as the git tag `legacy-produce-site`.
+- **The old source code was found** in GitHub at `khanforcedevelopment/sanjaya-store` (a static HTML site with two Netlify Functions for Stripe). No secret keys were committed in it. None of its code or design was reused. Its last version stays in GitHub history as commit `04552d0` on `main`.
 
 ### Features completed
 
