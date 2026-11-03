@@ -26,3 +26,14 @@ select tests.as_user(tests.id('alice'));
 insert into support_messages (ticket_id, author_id, body) values ('00000000-0000-0000-0000-0000000000f1', tests.id('alice'), 'Still not here');
 select tests.eq((select status from support_tickets where id = '00000000-0000-0000-0000-0000000000f1'), 'open', 'customer reply reopens the ticket');
 reset role;
+
+-- Phase 18: referral admin
+set role authenticated; select tests.as_user(tests.id('alice'));
+select tests.throws($$select * from admin_referrals()$$, 'Not allowed', 'customers cannot list referrals');
+select tests.throws($$select reject_referral((select id from referrals limit 1), 'fraud')$$, 'Only the Super Admin', 'customers cannot reject referrals');
+select tests.as_user(tests.id('admin'));
+select tests.ok((select count(*) from admin_referrals()) >= 1, 'super admin lists referrals');
+select tests.throws($$select reject_referral((select id from referrals limit 1), ' ')$$, 'reason is required', 'reject needs a reason');
+select reject_referral((select id from referrals where referee_id = tests.id('bob')), 'Same household');
+select tests.eq((select status from referrals where referee_id = tests.id('bob')), 'rejected', 'referral rejected');
+reset role;

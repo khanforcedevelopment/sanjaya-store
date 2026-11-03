@@ -1020,6 +1020,11 @@ isOneToOne: false
 "admin_dashboard":
 { Args: { "p_from"?: string,"p_to"?: string }; Returns: Json
                            },
+"admin_referrals":
+{ Args: { "p_limit"?: number }; Returns: {
+              "created_at": string,"id": string,"qualified_at": string,"referee_name": string,"referee_orders": number,"referee_phone": string,"referrer_name": string,"referrer_phone": string,"same_phone": boolean,"status": string
+            }[]
+                           },
 "apply_kyc_result":
 { Args: { "p_application": string,"p_document_number_hash": string,"p_document_type": string,"p_face_match_score": number,"p_liveness_passed": boolean,"p_name_on_document": string,"p_provider_flags"?: (string)[] }; Returns: Json
                            },
@@ -1170,6 +1175,9 @@ isOneToOne: false
                            },
 "register_manual_kyc":
 { Args: { "p_document_last4": string,"p_document_number_hash": string,"p_document_type": string,"p_name_on_document": string,"p_paths": (string)[],"p_user": string }; Returns: Json
+                           },
+"reject_referral":
+{ Args: { "p_reason": string,"p_referral": string }; Returns: undefined
                            },
 "remove_demo_products":
 { Args: Record<PropertyKey, never>; Returns: Json
