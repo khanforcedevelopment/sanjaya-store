@@ -60,9 +60,10 @@ Instead of drag and drop, Netlify can rebuild the site every time code is merged
    ```
 3. **Sign-in settings** (Supabase → Authentication):
    - URL Configuration: Site URL `https://sanjayatrading.store`; add redirect URL `https://sanjayatrading.store/**`.
-   - Email Templates → "Magic Link" and "Confirm signup": paste `supabase/templates/magic_link.html` and `confirmation.html` so emails show a 6-digit code (the site signs in with codes, not links).
+   - Email Templates → "Magic Link" and "Confirm signup": paste `supabase/templates/magic_link.html` and `confirmation.html` so emails show a 6-digit code (the site uses codes, not links).
+   - **Two-step sign-in** (password, then a code emailed to the customer): Sign In / Providers → Email: turn on **Confirm email**, minimum password length **8**. Then Auth Hooks → **Customize Access Token (JWT) Claims** → Postgres function `public.custom_access_token_hook` → enable. Turn the hook on only after the website with the new login page is live; without it, an emailed code alone would still sign people in. Accounts made before this change have no password: they use "Forgot password" once to set one.
    - SMTP Settings: connect Resend or Postmark. Supabase's built-in mailer only sends a few emails per hour and is not for real customers.
-   - Phone provider: enable only after MSG91/Twilio and DLT registration (see USER_TODO). Until then the site still offers mobile login, but the code will not be sent; switch it on before launch or ask the developer to hide the Mobile tab.
+   - Phone provider: needed only to verify mobile numbers for installments (sign-in is by email). Enable after MSG91/Twilio and DLT registration (see USER_TODO).
 4. Copy the **Project URL** and **anon public key** from Supabase → Project Settings → API into the website's public settings, then rebuild and redeploy the website.
 
 ## E. Stripe setup (Phase 9)

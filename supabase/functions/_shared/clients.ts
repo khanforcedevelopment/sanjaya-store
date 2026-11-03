@@ -6,23 +6,35 @@ type Json = Record<string, unknown>
 
 export class DbError extends Error {}
 
+const isJwt = (key: string) => key.split('.').length === 3
+
 /** Calls the database REST API, either as the service role (bypasses RLS) or as the signed-in caller. */
 export class Db {
-  constructor(private bearer: string) {}
-  static admin() { return new Db(requireEnv('SUPABASE_SERVICE_ROLE_KEY')) }
+  /** `apikey` identifies the project key; `bearer` is a JWT (user session or legacy key) or empty. */
+  constructor(private bearer: string, private apikey = requireEnv('SUPABASE_ANON_KEY')) {}
+  /**
+   * Service role. Hosted projects may inject either a legacy JWT key or a new `sb_secret_` key. A new
+   * key is not a JWT, so it must go in `apikey` only: the API gateway rejects it as a Bearer token.
+   */
+  static admin() {
+    const key = requireEnv('SUPABASE_SERVICE_ROLE_KEY')
+    return new Db(isJwt(key) ? key : '', key)
+  }
   static asUser(req: Request) { return new Db((req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')) }
 
   private async call(path: string, init: RequestInit & { prefer?: string } = {}) {
     const res = await fetch(`${requireEnv('SUPABASE_URL')}${path}`, {
       ...init,
       headers: {
-        apikey: requireEnv('SUPABASE_ANON_KEY'), Authorization: `Bearer ${this.bearer}`, 'Content-Type': 'application/json',
+        apikey: this.apikey, 'Content-Type': 'application/json',
+        ...(this.bearer ? { Authorization: `Bearer ${this.bearer}` } : {}),
         ...(init.prefer ? { Prefer: init.prefer } : {}),
       },
     })
     const text = await res.text()
-    const body = text ? JSON.parse(text) : null
-    if (!res.ok) throw new DbError(body?.message ?? body?.msg ?? `Database error ${res.status}`)
+    let body: any = null
+    try { body = text ? JSON.parse(text) : null } catch { if (res.ok) throw new DbError(`Database returned non-JSON (${res.status})`) }
+    if (!res.ok) throw new DbError(String(body?.message ?? body?.msg ?? `Database error ${res.status}: ${text.slice(0, 200)}`))
     return body
   }
   rpc<T = unknown>(fn: string, args: Json): Promise<T> { return this.call(`/rest/v1/rpc/${fn}`, { method: 'POST', body: JSON.stringify(args) }) }

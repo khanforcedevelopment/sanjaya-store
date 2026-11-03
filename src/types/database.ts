@@ -359,6 +359,34 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"login_challenges": {
+                  Row: {
+                    "passed_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "passed_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "passed_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"login_failures": {
+                  Row: {
+                    "at": string,"email": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"email": string
+                  }
+                  Update: {
+                    "at"?: string,"email"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"loyalty_ledger": {
                   Row: {
                     "created_at": string,"id": number,"note": string | null,"order_id": string | null,"points": number,"reason": string,"user_id": string
@@ -1061,6 +1089,9 @@ isOneToOne: false
 "create_payment_record":
 { Args: { "p_amount": number,"p_installment": string,"p_livemode": boolean,"p_order": string,"p_purpose": string,"p_session_id": string }; Returns: string
                            },
+"custom_access_token_hook":
+{ Args: { "event": Json }; Returns: Json
+                           },
 "decide_kyc":
 { Args: { "p_application": string,"p_reason": string,"p_status": Database["public"]['Enums']["kyc_status"] }; Returns: undefined
                            },
@@ -1201,6 +1232,12 @@ isOneToOne: false
                            },
 "setting":
 { Args: { "p_key": string }; Returns: Json
+                           },
+"start_password_login":
+{ Args: { "p_email": string,"p_password": string }; Returns: string
+                           },
+"start_password_reset":
+{ Args: { "p_email": string }; Returns: string
                            },
 "transition_order":
 { Args: { "p_customer_visible"?: boolean,"p_note"?: string,"p_order": string,"p_to": Database["public"]['Enums']["order_status"] }; Returns: undefined

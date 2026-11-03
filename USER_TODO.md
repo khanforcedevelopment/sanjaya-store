@@ -40,7 +40,7 @@ Last updated: 2026-11-03
 
 - [ ] **SMS OTP** for phone login **and for verifying mobile numbers (required for installments)**: MSG91 or Twilio (pay per SMS, roughly ₹0.20–0.50 each in India; India requires DLT registration of your sender ID and templates, which takes a few days).
 - [ ] **KYC provider (optional, later)**: identity checks already work for free by document upload and your review in Admin → Identity checks. An automatic provider (IDfy, HyperVerge or Digio; roughly ₹5–30 per check) adds instant decisions, selfie liveness and Aadhaar e-KYC. Only needed when volume grows.
-- [ ] **Email sending**: Resend (free up to 3,000 emails a month, then about US$20/month). Needed for login codes and order updates on the live site; Supabase's own mailer allows only a few emails per hour. Steps: DEPLOYMENT.md section E3.
+- [ ] **Email sending (urgent now)**: Resend (free up to 3,000 emails a month, then about US$20/month). **Every sign-in now sends a code by email**, and Supabase's own mailer allows only a few emails per hour, so customers will hit "too many requests" without it. Connect Resend in Supabase → Authentication → SMTP Settings (and DEPLOYMENT.md section E3 for order emails).
 - [ ] **WhatsApp Business** notifications: Meta Cloud API or a provider like Interakt/AiSensy.
 - [ ] **Supabase Pro** (about US$25/month) at launch so the database never pauses and has daily backups.
 - Maps use free OpenStreetMap tiles by default; no account needed unless traffic grows.
