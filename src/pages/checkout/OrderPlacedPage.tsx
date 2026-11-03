@@ -19,7 +19,7 @@ export function useOrder(id: string | undefined, poll = false) {
     // after returning from Stripe, refresh until the webhook has confirmed the payment
     refetchInterval: (q) => (poll && q.state.data?.status === 'payment_pending' && q.state.dataUpdateCount < 20 ? 3000 : false),
     queryFn: async () => {
-      const { data, error } = await requireSupabase().from('orders').select('*, order_items(*)').eq('id', id!).maybeSingle()
+      const { data, error } = await requireSupabase().from('orders').select('*, order_items(*), plan:installment_plans(installments(seq, amount_paise))').eq('id', id!).maybeSingle()
       if (error) throw error
       return data
     },
@@ -43,6 +43,10 @@ export function OrderPlacedPage() {
   if (!o) return <div className="container-x py-10"><EmptyState title="Order not found">This order does not exist or belongs to another account.</EmptyState></div>
 
   const addr = o.shipping_address as Record<string, string>
+  const plan = (Array.isArray(o.plan) ? o.plan[0] : o.plan) as { installments: { seq: number; amount_paise: number }[] } | null | undefined
+  const firstInstallment = plan?.installments.find((i) => i.seq === 1)?.amount_paise
+  const dueNow = o.payment_mode === 'installment' && firstInstallment ? firstInstallment : o.total_paise
+  const payLabel = o.payment_mode === 'installment' ? `Pay first installment ${formatINR(dueNow)}` : `Pay ${formatINR(dueNow)} securely`
   return (
     <div className="container-x max-w-3xl py-10">
       <div className="text-center">
@@ -56,10 +60,10 @@ export function OrderPlacedPage() {
       {o.status === 'payment_pending' && returned !== 'success' && (
         <div className="mt-6 space-y-3">
           <Alert tone="warning" title={returned === 'cancelled' ? 'Payment not completed' : 'Payment pending'}>
-            <span className="flex items-center gap-1"><Clock className="size-4" /> We hold your items{o.payment_expires_at ? ` until ${formatDateTime(o.payment_expires_at)}` : ''}. Pay {formatINR(o.total_paise)} by card to confirm the order.</span>
+            <span className="flex items-center gap-1"><Clock className="size-4" /> We hold your items{o.payment_expires_at ? ` until ${formatDateTime(o.payment_expires_at)}` : ''}. Pay {formatINR(dueNow)} by card to confirm the order{o.payment_mode === 'installment' ? ' (first of your monthly installments)' : ''}.</span>
           </Alert>
           {payError && <Alert tone="error">{payError}</Alert>}
-          <Button size="lg" className="w-full" loading={paying} onClick={pay}>Pay {formatINR(o.total_paise)} securely</Button>
+          <Button size="lg" className="w-full" loading={paying} onClick={pay}>{payLabel}</Button>
         </div>
       )}
       {['payment_confirmed', 'awaiting_approval'].includes(o.status) && (
@@ -82,6 +86,7 @@ export function OrderPlacedPage() {
           {o.discount_paise > 0 && <div className="flex justify-between text-success"><dt>Discount {o.coupon_code}</dt><dd>− {formatINR(o.discount_paise)}</dd></div>}
           <div className="flex justify-between"><dt>Delivery</dt><dd>{o.delivery_fee_paise ? formatINR(o.delivery_fee_paise) : 'FREE'}</dd></div>
           <div className="flex justify-between text-base font-bold text-navy-900"><dt>Total</dt><dd>{formatINR(o.total_paise)}</dd></div>
+          {o.payment_mode === 'installment' && plan && <div className="flex justify-between text-navy-700"><dt>Monthly installments</dt><dd>{plan.installments.length} payments · <a href="/account/installments" className="font-semibold text-gold-700 underline">View plan</a></dd></div>}
         </dl>
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">

@@ -18,12 +18,35 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 12 | Customer delivery tracking | ✅ Done, merged |
 | 13 | Super Admin dashboard | ✅ Done, merged |
 | 14 | Staff role management | ✅ Done, merged |
-| 15 | Six-installment system | Not started |
+| 15 | Six-installment system | ✅ Done, merged (test mode; live blocked until legal review) |
 | 16 | KYC and automatic eligibility | Not started |
 | 17 | Customer dashboard | Not started |
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 15 report: six monthly installments (test mode)
+
+### Features completed
+- **Checkout**: when every item in the bag allows installments, customers see "Pay in 6 monthly installments · ₹X today". If they are not eligible yet, the reasons are listed with a link to fix each one (verify mobile, verify identity, pay an overdue installment). Choosing it shows the plain-language terms and an "I agree" box; the order button then reads "Place order · pay ₹X" (first installment).
+- **Amounts in whole rupees**: the later payments are rounded down to the rupee and the first payment takes the remainder, so the total is exactly the order total. No interest, no fee.
+- **Info page `/installments`** (linked from product pages and the footer): how it works, the terms, your eligibility checklist, and which categories allow it (mobile phones off).
+- **My account → Installments**: every plan with progress, schedule and status, and a "Pay installment N" button that opens Stripe for the next payment.
+- **Order page**: installment orders ask for the first installment, not the full total, and link to the plan.
+- **Collections desk `/admin/collections`** (collections staff and Super Admin): overdue installments with the customer's phone, status (open, contacted, promised, resolved, escalated), promised date and notes. Super Admin can assign tasks and waive an installment with a reason (audited).
+- **Safety**: with live Stripe keys, installment payments are refused unless *Settings → Installments → live enabled* is on, separately from normal live payments.
+
+### Database changes
+- `20261103001200_installments.sql`: whole-rupee `installment_split`.
+
+### Tests run
+- Database tests: 155 assertions pass (new: split amounts and total preserved).
+- Browser test on local Supabase: new customer sees "verify mobile" and "verify identity" → after both, eligible → laptop in bag → installment option, button disabled until terms are accepted → first installment ₹15,704 of ₹94,199 paid via signed webhook → plan active, installments 2–6 scheduled → "Pay installment 2" opens Stripe → overdue task appears in Collections → note and promised date saved → Super Admin waives with reason (audit log written) → no sideways scroll on a phone, no browser errors.
+
+### Next requirements (you)
+- A lawyer must confirm whether this plan counts as lending in India (USER_TODO, Before launch). The terms text is marked as a draft until then.
 
 ---
 

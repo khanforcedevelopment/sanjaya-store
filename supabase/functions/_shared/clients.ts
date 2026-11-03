@@ -79,8 +79,11 @@ export async function verifyStripeSignature(payload: string, header: string, sec
 export const isLiveKey = (key: string) => key.startsWith('sk_live_') || key.startsWith('rk_live_')
 
 /** Live payments stay off until the owner switches payments.live_enabled on in admin settings. */
-export async function assertPaymentsAllowed(admin: Db) {
+export async function assertPaymentsAllowed(admin: Db, installment = false) {
   if (!isLiveKey(requireEnv('STRIPE_SECRET_KEY'))) return
-  const rows = await admin.select<{ value: { live_enabled?: boolean } }>('site_settings', 'key=eq.payments&select=value')
-  if (!rows[0]?.value?.live_enabled) throw new Error('Live payments are not switched on yet')
+  const rows = await admin.select<{ key: string; value: { live_enabled?: boolean } }>('site_settings', 'key=in.(payments,installments)&select=key,value')
+  const on = (k: string) => rows.find((r) => r.key === k)?.value?.live_enabled === true
+  if (!on('payments')) throw new Error('Live payments are not switched on yet')
+  // Six-installment plans need their own switch (legal review pending)
+  if (installment && !on('installments')) throw new Error('Live installments are not switched on yet')
 }

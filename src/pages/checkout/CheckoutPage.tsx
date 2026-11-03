@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import { CreditCard, MapPin, Plus, ShieldCheck } from 'lucide-react'
+import { CalendarClock, CreditCard, MapPin, Plus, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Alert, Badge, PageTitle, Skeleton } from '@/components/ui/misc'
 import { TextareaField } from '@/components/ui/Field'
@@ -18,6 +18,8 @@ import { formatINR } from '@/lib/money'
 import { useDocumentMeta } from '@/lib/meta'
 import type { AddressInput, PlacedOrder } from '@/lib/types'
 import { cn } from '@/lib/cn'
+import { reasonLink, useInstallmentSettings, useMyEligibility } from '@/features/installments/api'
+import { AgreementText } from '@/features/installments/Agreement'
 
 export function CheckoutPage() {
   useDocumentMeta({ title: 'Checkout', noindex: true })
@@ -35,6 +37,23 @@ export function CheckoutPage() {
   const lines = toLines(items)
   const quote = useQuote(lines, selected?.pincode, coupon, user?.id)
   const q = quote.data
+  const { data: inst } = useInstallmentSettings()
+  const { data: elig } = useMyEligibility(!!user)
+  const [mode, setMode] = useState<'full' | 'installment'>('full')
+  const [agreed, setAgreed] = useState(false)
+  const schedule = q?.installment.schedule_paise ?? null
+  // Show the option only when installments are on and every item in the bag allows them
+  const firstPay = schedule?.[0] ?? 0
+  const laterPay = schedule?.[schedule.length - 1] ?? 0
+  const offerInstallments = !!(inst?.enabled && q?.installment.products_eligible && schedule)
+  const amountReasons = q && inst ? [
+    q.total_paise < inst.min_order_total_paise ? `Order must be at least ${formatINR(inst.min_order_total_paise)}` : null,
+    inst.max_order_total_paise && q.total_paise > inst.max_order_total_paise ? `Order must be at most ${formatINR(inst.max_order_total_paise)}` : null,
+  ].filter((r): r is string => !!r) : []
+  const instReasons = [...(elig?.reasons ?? []), ...amountReasons]
+  const canInstall = offerInstallments && !!elig?.eligible && amountReasons.length === 0
+  const useInst = mode === 'installment' && canInstall
+  const payNow = q ? (useInst ? firstPay : q.total_paise) : 0
 
   const place = useMutation({
     mutationFn: async (a: Address) => {
@@ -45,7 +64,8 @@ export function CheckoutPage() {
       }
       const { data, error } = await requireSupabase().rpc('place_order', {
         p_items: lines as never, p_address: address as never, p_coupon_code: coupon || undefined,
-        p_payment_mode: 'full', p_customer_note: note.trim() || undefined,
+        p_payment_mode: useInst ? 'installment' : 'full', p_customer_note: note.trim() || undefined,
+        p_agreement_version: useInst ? inst?.agreement_version : undefined,
       })
       if (error) throw error
       return data as unknown as PlacedOrder
@@ -67,7 +87,7 @@ export function CheckoutPage() {
       onSuccess: (id) => { setPicked(id); setAdding(false) }, onError: (e) => setError(friendlyError(e)),
     })
   }
-  const blocked = !selected || !q || !!q.errors.length || !q.delivery.serviceable || !!(coupon && q.coupon.error)
+  const blocked = (useInst && !agreed) || !selected || !q || !!q.errors.length || !q.delivery.serviceable || !!(coupon && q.coupon.error)
 
   return (
     <div className="container-x py-8">
@@ -102,9 +122,35 @@ export function CheckoutPage() {
 
           <section className="card p-5">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-navy-900"><CreditCard className="size-5 text-gold-600" /> Payment</h2>
-            <div className="rounded-2xl border border-gold-500 bg-gold-200/20 p-4 text-sm ring-1 ring-gold-500">
-              <p className="font-semibold text-navy-900">Pay in full by card {q && <span className="font-bold">· {formatINR(q.total_paise)}</span>}</p>
-              <p className="mt-1 text-navy-700">You will pay on Stripe's secure page right after placing the order. Unpaid orders are released after 60 minutes.</p>
+            <div className="grid gap-3" role="radiogroup" aria-label="How do you want to pay?">
+              <button type="button" role="radio" aria-checked={!useInst} onClick={() => setMode('full')}
+                className={cn('rounded-2xl border p-4 text-left text-sm transition', !useInst ? 'border-gold-500 bg-gold-200/20 ring-1 ring-gold-500' : 'border-navy-100 hover:border-gold-400')}>
+                <span className="block font-semibold text-navy-900">Pay in full by card {q && <span className="font-bold">· {formatINR(q.total_paise)}</span>}</span>
+                <span className="mt-1 block text-navy-700">You will pay on Stripe's secure page right after placing the order. Unpaid orders are released after 60 minutes.</span>
+              </button>
+              {offerInstallments && (
+                <div className={cn('rounded-2xl border p-4 text-sm transition', useInst ? 'border-gold-500 bg-gold-200/20 ring-1 ring-gold-500' : 'border-navy-100')}>
+                  <button type="button" role="radio" aria-checked={useInst} disabled={!canInstall} onClick={() => setMode('installment')} className="w-full text-left disabled:cursor-not-allowed">
+                    <span className="flex items-center gap-2 font-semibold text-navy-900"><CalendarClock className="size-4 text-gold-700" /> Pay in {schedule!.length} monthly installments · {formatINR(firstPay)} today</span>
+                    <span className="mt-1 block text-navy-700">No interest, no fee. {schedule!.length - 1} more payments of about {formatINR(laterPay)}, one each month.</span>
+                  </button>
+                  {!canInstall && user && elig && (
+                    <ul className="mt-3 space-y-1 text-navy-700">
+                      <li className="font-semibold text-navy-900">To unlock installments:</li>
+                      {instReasons.map((r) => { const l = reasonLink(r); return <li key={r}>• {r}{l && <> · <Link to={l.to} className="font-semibold text-gold-700 underline">{l.label}</Link></>}</li> })}
+                    </ul>
+                  )}
+                  {useInst && (
+                    <div className="mt-4 rounded-xl bg-white p-3">
+                      <AgreementText schedule={schedule} graceDays={inst?.grace_days} version={inst?.agreement_version} />
+                      <label className="mt-3 flex items-start gap-2 font-medium text-navy-900">
+                        <input type="checkbox" className="mt-0.5 size-4 accent-gold-500" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+                        I have read and agree to the installment terms above.
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <p className="mt-3 flex items-center gap-2 text-xs text-navy-600/80"><ShieldCheck className="size-4 text-success" /> Every order is checked and approved by our team before dispatch from Mumbai.</p>
           </section>
@@ -118,7 +164,7 @@ export function CheckoutPage() {
             {q?.errors.map((e) => <Alert key={e} tone="warning">{e}</Alert>)}
             {error && <Alert tone="error">{error}</Alert>}
             <Button size="lg" className="w-full" disabled={blocked || showForm} loading={place.isPending} onClick={() => { setError(null); place.mutate(selected!) }}>
-              Place order{q ? ` · ${formatINR(q.total_paise)}` : ''}
+              Place order{q ? ` · pay ${formatINR(payNow)}` : ''}
             </Button>
             <p className="text-center text-xs text-navy-600/70">By placing the order you agree to our <a href="/policies/terms" className="underline">Terms</a> and <a href="/policies/returns" className="underline">Returns policy</a>.</p>
           </OrderSummary>
