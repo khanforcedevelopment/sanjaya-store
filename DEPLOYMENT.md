@@ -58,7 +58,12 @@ Instead of drag and drop, Netlify can rebuild the site every time code is merged
    supabase functions deploy        # deploys the server code
    supabase secrets set STRIPE_SECRET_KEY=sk_test_... STRIPE_WEBHOOK_SECRET=whsec_...
    ```
-3. Copy the **Project URL** and **anon public key** from Supabase → Project Settings → API into the website's public settings, then rebuild and redeploy the website.
+3. **Sign-in settings** (Supabase → Authentication):
+   - URL Configuration: Site URL `https://sanjayatrading.store`; add redirect URL `https://sanjayatrading.store/**`.
+   - Email Templates → "Magic Link" and "Confirm signup": paste `supabase/templates/magic_link.html` and `confirmation.html` so emails show a 6-digit code (the site signs in with codes, not links).
+   - SMTP Settings: connect Resend or Postmark. Supabase's built-in mailer only sends a few emails per hour and is not for real customers.
+   - Phone provider: enable only after MSG91/Twilio and DLT registration (see USER_TODO). Until then the site still offers mobile login, but the code will not be sent; switch it on before launch or ask the developer to hide the Mobile tab.
+4. Copy the **Project URL** and **anon public key** from Supabase → Project Settings → API into the website's public settings, then rebuild and redeploy the website.
 
 ## E. Stripe setup (Phase 9)
 

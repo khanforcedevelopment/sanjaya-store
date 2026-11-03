@@ -1170,7 +1170,10 @@ isOneToOne: false
             }[]
                            },
 "search_products":
-{ Args: { "p_brands"?: (string)[],"p_category"?: string,"p_featured"?: boolean,"p_in_stock"?: boolean,"p_limit"?: number,"p_max_paise"?: number,"p_min_paise"?: number,"p_offset"?: number,"p_query"?: string,"p_sort"?: string,"p_tag"?: string }; Returns: Json
+{ Args: { "p_brands"?: (string)[],"p_category"?: string,"p_featured"?: boolean,"p_ids"?: (string)[],"p_in_stock"?: boolean,"p_limit"?: number,"p_max_paise"?: number,"p_min_paise"?: number,"p_offset"?: number,"p_query"?: string,"p_sort"?: string,"p_tag"?: string }; Returns: Json
+                           },
+"set_default_address":
+{ Args: { "p_address": string }; Returns: undefined
                            },
 "set_staff_role":
 { Args: { "p_grant": boolean,"p_role": Database["public"]['Enums']["app_role"],"p_user_id": string }; Returns: undefined

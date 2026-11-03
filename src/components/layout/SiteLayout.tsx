@@ -6,9 +6,11 @@ import { MobileNav } from './MobileNav'
 import { BackendNotice } from './BackendNotice'
 import { CartDrawer } from '@/features/cart/CartDrawer'
 import { PageSpinner } from './PageSpinner'
+import { captureReferral } from '@/features/account/referralCapture'
 
 export function SiteLayout() {
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
+  useEffect(() => { captureReferral(search) }, [search])
   useEffect(() => { document.documentElement.dataset.route = pathname.split('/')[1] || 'home' }, [pathname])
   return (
     <div className="flex min-h-dvh flex-col">

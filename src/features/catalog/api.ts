@@ -15,6 +15,7 @@ export interface ListingResult {
 export interface ListingParams {
   category?: string | null; q?: string | null; brands?: string[]; min?: number | null; max?: number | null
   inStock?: boolean; tag?: string | null; featured?: boolean; sort?: string; limit?: number; offset?: number
+  ids?: string[]
 }
 
 export function useProducts(params: ListingParams, enabled = true) {
@@ -35,6 +36,7 @@ export function useProducts(params: ListingParams, enabled = true) {
         p_sort: params.sort ?? 'relevance',
         p_limit: params.limit ?? 24,
         p_offset: params.offset ?? 0,
+        p_ids: params.ids,
       })
       if (error) throw error
       return data as unknown as ListingResult
@@ -109,16 +111,17 @@ export function useProduct(slug: string | undefined) {
   })
 }
 
+async function fetchPincode(pincode: string) {
+  const { data, error } = await requireSupabase().rpc('check_pincode', { p_pincode: pincode })
+  if (error) throw error
+  return data as unknown as PincodeCheck
+}
+export const pincodeQuery = (pincode: string) => ({ queryKey: ['pincode', pincode], staleTime: 10 * 60_000, queryFn: () => fetchPincode(pincode) })
+
 export function usePincodeCheck(pincode: string | null) {
   return useQuery({
-    queryKey: ['pincode', pincode],
+    ...pincodeQuery(pincode ?? ''),
     enabled: !!supabase && !!pincode && /^[1-9][0-9]{5}$/.test(pincode),
-    staleTime: 10 * 60_000,
-    queryFn: async () => {
-      const { data, error } = await requireSupabase().rpc('check_pincode', { p_pincode: pincode! })
-      if (error) throw error
-      return data as unknown as PincodeCheck
-    },
   })
 }
 
