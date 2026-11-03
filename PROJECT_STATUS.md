@@ -20,10 +20,29 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 14 | Staff role management | ✅ Done, merged |
 | 15 | Six-installment system | ✅ Done, merged (test mode; live blocked until legal review) |
 | 16 | KYC and automatic eligibility | ✅ Done, merged (document review; automatic provider optional later) |
-| 17 | Customer dashboard | Not started |
+| 17 | Customer dashboard | ✅ Done, merged |
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 17 report: customer dashboard
+
+### Features completed
+- **My account** now has: Overview, **Orders**, Profile (with verified mobile), Addresses, Wishlist, Installments, Verify identity, **Rewards**, **Help**. Works on phone (scrolling tab bar) and desktop (side menu).
+- **Orders**: every order with picture, status, delay and installment badges, date and total. Opens the order page with tracking, timeline and the 4-digit delivery code (Phase 12).
+- **Cancel order**: customers can cancel while the order is awaiting payment, awaiting approval or confirmed (not after packing). Stock is released and a paid order is flagged for refund.
+- **Rewards**: invite progress (5 boxes), share or copy the invite link, friends and whether they count yet, reward coupons with expiry, loyalty points with "Get coupon" redemption.
+- **Help**: start a request (optionally about an order, also from the order page), chat-style conversation, status "Waiting for our team / We replied / Resolved", WhatsApp and email shown.
+- **Staff → Support** (`/admin/support`, support role): queue of waiting requests, oldest first, reply, mark resolved, link to the order. A staff reply queues an email to the customer; the customer's reply reopens the request.
+
+### Database changes
+- `20261103001400_support.sql`: ticket status follows the conversation; at most 5 new requests a day; a request can only be linked to the customer's own order.
+
+### Tests run
+- Database tests: 165 assertions pass (new: customers cannot post as staff, see only their own requests, status changes on reply and reopen).
+- Browser test on local Supabase: place an order → it appears in My orders → cancel with a reason → status Cancelled → "Get help with this order" opens a request → support staff replies in the staff panel → customer sees the reply and "We replied" → customer answers, request reopens → points redemption refuses more points than the balance → no sideways scroll on a phone on any account page, no browser errors.
 
 ---
 

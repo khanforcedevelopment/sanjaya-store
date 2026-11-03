@@ -1,15 +1,18 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { CalendarClock, Heart, LayoutDashboard, LogOut, MapPin, UserRound, ShieldCheck } from 'lucide-react'
+import { CalendarClock, Gift, Heart, LifeBuoy, Package, LayoutDashboard, LogOut, MapPin, UserRound, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/features/account/AuthProvider'
 import { cn } from '@/lib/cn'
 
 const LINKS = [
   { to: '/account', label: 'Overview', icon: LayoutDashboard, end: true },
+  { to: '/account/orders', label: 'Orders', icon: Package },
   { to: '/account/profile', label: 'Profile', icon: UserRound },
   { to: '/account/addresses', label: 'Addresses', icon: MapPin },
   { to: '/account/wishlist', label: 'Wishlist', icon: Heart },
   { to: '/account/installments', label: 'Installments', icon: CalendarClock },
   { to: '/account/verify', label: 'Verify identity', icon: ShieldCheck },
+  { to: '/account/rewards', label: 'Rewards', icon: Gift },
+  { to: '/account/support', label: 'Help', icon: LifeBuoy },
 ]
 
 export function AccountLayout() {
