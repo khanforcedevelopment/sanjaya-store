@@ -30,6 +30,9 @@ const AdminMarketing = lazy(() => import('@/pages/admin/AdminMarketing').then((m
 const AdminDelivery = lazy(() => import('@/pages/admin/AdminDelivery').then((m) => ({ default: m.AdminDelivery })))
 const AdminStaff = lazy(() => import('@/pages/admin/AdminStaff').then((m) => ({ default: m.AdminStaff })))
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings').then((m) => ({ default: m.AdminSettings })))
+const AdminCollections = lazy(() => import('@/pages/admin/AdminCollections').then((m) => ({ default: m.AdminCollections })))
+const InstallmentsPage = lazy(() => import('@/pages/account/InstallmentsPage').then((m) => ({ default: m.InstallmentsPage })))
+const InstallmentsInfoPage = lazy(() => import('@/pages/InstallmentsInfoPage').then((m) => ({ default: m.InstallmentsInfoPage })))
 const RiderQueue = lazy(() => import('@/pages/admin/RiderQueue').then((m) => ({ default: m.RiderQueue })))
 
 /**
@@ -47,6 +50,7 @@ export const routes: RouteObject[] = [
       { path: 'categories', element: <CategoriesPage /> },
       { path: 'p/:slug', element: <ProductPage /> },
       { path: 'delivery', element: <DeliveryPage /> },
+      { path: 'installments', element: <InstallmentsInfoPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'checkout', element: <RequireAuth><CheckoutPage /></RequireAuth> },
       { path: 'order/:id', element: <RequireAuth><OrderPlacedPage /></RequireAuth> },
@@ -59,6 +63,7 @@ export const routes: RouteObject[] = [
           { path: 'profile', element: <ProfilePage /> },
           { path: 'addresses', element: <AddressesPage /> },
           { path: 'wishlist', element: <WishlistPage /> },
+          { path: 'installments', element: <InstallmentsPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
@@ -71,6 +76,7 @@ export const routes: RouteObject[] = [
       { index: true, element: <RequireAuth roles={['operations', 'support', 'collections']}><AdminDashboard /></RequireAuth> },
       { path: 'orders', element: <RequireAuth roles={['operations', 'support']}><AdminOrders /></RequireAuth> },
       { path: 'orders/:id', element: <RequireAuth roles={['operations', 'support']}><AdminOrderDetail /></RequireAuth> },
+      { path: 'collections', element: <RequireAuth roles={['collections']}><AdminCollections /></RequireAuth> },
       { path: 'rider', element: <RequireAuth roles={['delivery']}><RiderQueue /></RequireAuth> },
       { path: 'products', element: <RequireAuth roles={['operations']}><AdminProducts /></RequireAuth> },
       { path: 'products/:id', element: <RequireAuth roles={['operations']}><AdminProductEdit /></RequireAuth> },

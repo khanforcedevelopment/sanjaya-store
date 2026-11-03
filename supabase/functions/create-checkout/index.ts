@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     catch (e) { return json(req, { error: e instanceof DbError ? e.message : 'Order not found' }, 400) }
 
     const admin = Db.admin()
-    await assertPaymentsAllowed(admin)
+    await assertPaymentsAllowed(admin, t.purpose !== 'full')
 
     // Stripe allows 30 minutes to 24 hours. The database releases unpaid orders on its own timer
     // and flags any later payment for a refund.

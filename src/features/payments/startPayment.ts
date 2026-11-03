@@ -1,7 +1,7 @@
 import { requireSupabase } from '@/lib/supabase'
 
 /** Asks our server for a Stripe Checkout page for this order (or installment) and opens it. */
-export async function startPayment(orderId: string, installmentId?: string): Promise<void> {
+export async function startPayment(orderId: string, installmentId?: string | null): Promise<void> {
   const { data, error } = await requireSupabase().functions.invoke<{ url?: string; error?: string }>('create-checkout', {
     body: { order_id: orderId, installment_id: installmentId ?? null },
   })

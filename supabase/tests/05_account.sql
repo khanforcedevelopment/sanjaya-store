@@ -35,3 +35,8 @@ select tests.throws($$select * from list_staff()$$, 'Not allowed', 'operations c
 select tests.as_user(tests.id('admin'));
 select tests.ok((select count(*) from list_staff()) >= 1, 'super admin lists staff');
 reset role;
+
+-- Installment split: whole rupees, total preserved
+select tests.eq(installment_split(9419900, 6), array[1570400, 1569900, 1569900, 1569900, 1569900, 1569900]::bigint[], 'split 94,199 into 6 whole-rupee payments');
+select tests.eq((select sum(x) from unnest(installment_split(1234567, 6)) x)::bigint, 1234567::bigint, 'split keeps the total');
+select tests.eq(installment_split(12, 6), array[2, 2, 2, 2, 2, 2]::bigint[], 'tiny totals fall back to paise');
