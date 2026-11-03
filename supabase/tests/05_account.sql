@@ -24,3 +24,14 @@ set role anon; select tests.as_anon();
 select tests.eq((search_products(p_ids => array[(select id from products where is_active and slug <> 'new-kurta' limit 1)])->'facets'->>'total')::int, 1, 'search by product ids');
 select tests.eq((search_products(p_ids => array[]::uuid[])->'facets'->>'total')::int, 0, 'empty id list returns nothing');
 reset role;
+
+-- Staff panel helpers
+set role authenticated; select tests.as_user(tests.id('alice'));
+select tests.throws($$select * from list_delivery_staff()$$, 'Not allowed', 'customers cannot list riders');
+select tests.throws($$select * from list_staff()$$, 'Not allowed', 'customers cannot list staff');
+select tests.as_user(tests.id('ops'));
+select tests.ok((select count(*) from list_delivery_staff()) >= 0, 'operations can list riders');
+select tests.throws($$select * from list_staff()$$, 'Not allowed', 'operations cannot list all staff');
+select tests.as_user(tests.id('admin'));
+select tests.ok((select count(*) from list_staff()) >= 1, 'super admin lists staff');
+reset role;

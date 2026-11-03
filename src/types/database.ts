@@ -1102,6 +1102,16 @@ isOneToOne: false
 "ist_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"list_delivery_staff":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "active_orders": number,"full_name": string,"id": string,"phone": string
+            }[]
+                           },
+"list_staff":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "email": string,"full_name": string,"id": string,"phone": string,"roles": (string)[]
+            }[]
+                           },
 "loyalty_balance":
 { Args: { "p_user"?: string }; Returns: number
                            },

@@ -19,6 +19,19 @@ const OrderPlacedPage = lazy(() => import('@/pages/checkout/OrderPlacedPage').th
 const DeliveryPage = lazy(() => import('@/pages/DeliveryPage').then((m) => ({ default: m.DeliveryPage })))
 const CategoriesPage = lazy(() => import('@/pages/CategoriesPage').then((m) => ({ default: m.CategoriesPage })))
 
+const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })))
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })))
+const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders').then((m) => ({ default: m.AdminOrders })))
+const AdminOrderDetail = lazy(() => import('@/pages/admin/AdminOrderDetail').then((m) => ({ default: m.AdminOrderDetail })))
+const AdminProducts = lazy(() => import('@/pages/admin/AdminProducts').then((m) => ({ default: m.AdminProducts })))
+const AdminProductEdit = lazy(() => import('@/pages/admin/AdminProducts').then((m) => ({ default: m.AdminProductEdit })))
+const AdminImport = lazy(() => import('@/pages/admin/AdminImport').then((m) => ({ default: m.AdminImport })))
+const AdminMarketing = lazy(() => import('@/pages/admin/AdminMarketing').then((m) => ({ default: m.AdminMarketing })))
+const AdminDelivery = lazy(() => import('@/pages/admin/AdminDelivery').then((m) => ({ default: m.AdminDelivery })))
+const AdminStaff = lazy(() => import('@/pages/admin/AdminStaff').then((m) => ({ default: m.AdminStaff })))
+const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings').then((m) => ({ default: m.AdminSettings })))
+const RiderQueue = lazy(() => import('@/pages/admin/RiderQueue').then((m) => ({ default: m.RiderQueue })))
+
 /**
  * Client-side routes. Netlify serves index.html for every path (public/_redirects),
  * so deep links such as /p/some-product work after a drag-and-drop deploy.
@@ -49,6 +62,23 @@ export const routes: RouteObject[] = [
         ],
       },
       { path: '*', element: <NotFoundPage /> },
+    ],
+  },
+  {
+    path: 'admin',
+    element: <RequireAuth roles={[]}><AdminLayout /></RequireAuth>,
+    children: [
+      { index: true, element: <RequireAuth roles={['operations', 'support', 'collections']}><AdminDashboard /></RequireAuth> },
+      { path: 'orders', element: <RequireAuth roles={['operations', 'support']}><AdminOrders /></RequireAuth> },
+      { path: 'orders/:id', element: <RequireAuth roles={['operations', 'support']}><AdminOrderDetail /></RequireAuth> },
+      { path: 'rider', element: <RequireAuth roles={['delivery']}><RiderQueue /></RequireAuth> },
+      { path: 'products', element: <RequireAuth roles={['operations']}><AdminProducts /></RequireAuth> },
+      { path: 'products/:id', element: <RequireAuth roles={['operations']}><AdminProductEdit /></RequireAuth> },
+      { path: 'import', element: <RequireAuth roles={['operations']}><AdminImport /></RequireAuth> },
+      { path: 'marketing', element: <RequireAuth roles={['operations']}><AdminMarketing /></RequireAuth> },
+      { path: 'delivery', element: <RequireAuth roles={['operations']}><AdminDelivery /></RequireAuth> },
+      { path: 'staff', element: <RequireAuth roles={['super_admin']}><AdminStaff /></RequireAuth> },
+      { path: 'settings', element: <RequireAuth roles={['super_admin']}><AdminSettings /></RequireAuth> },
     ],
   },
 ]

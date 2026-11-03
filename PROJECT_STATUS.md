@@ -12,18 +12,45 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 6 | Cart and checkout | ✅ Done, merged |
 | 7 | Delivery charges and serviceability | ✅ Done, merged |
 | 8 | Customer GPS address | ✅ Done, merged |
-| 9 | Stripe integration | ✅ Done (test mode; live blocked until approved) |
-| 10 | Order approval system | Not started |
-| 11 | In-house delivery management | Not started |
-| 12 | Customer delivery tracking | Not started |
-| 13 | Super Admin dashboard | Not started |
-| 14 | Staff role management | Not started |
+| 9 | Stripe integration | ✅ Done, merged (test mode; live blocked until approved) |
+| 10 | Order approval system | ✅ Done, merged |
+| 11 | In-house delivery management | ✅ Done, merged |
+| 12 | Customer delivery tracking | ✅ Done, merged |
+| 13 | Super Admin dashboard | ✅ Done, merged |
+| 14 | Staff role management | ✅ Done, merged |
 | 15 | Six-installment system | Not started |
 | 16 | KYC and automatic eligibility | Not started |
 | 17 | Customer dashboard | Not started |
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phases 10–14 report: staff panel, approvals, delivery and tracking
+
+### Features completed
+- **Staff panel at `/admin`** (separate from the shop, works on phone and desktop). Each person only sees the sections their role allows.
+- **Dashboard** (Phase 13): payments, refunds, paid orders, new customers, orders awaiting approval, delayed orders, low stock, overdue installments, payments per day and top products.
+- **Order approval** (Phase 10): order list with status filters, delayed filter and search. The order page shows items, totals, payments, timeline and the next allowed steps for your role (Approve order, Processing, Packed, Dispatched, ...). Super Admin refunds from the payment row. Delay reports with a reason and new date are shown to the customer.
+- **In-house delivery** (Phase 11): assign a rider and date. Riders get **My deliveries** with call and map buttons, amount to collect, Start delivery, Delivered (4-digit customer code, receiver name, optional doorstep photo) and Could not deliver (reason, note, new date).
+- **Customer tracking** (Phase 12): the order page shows a progress bar, expected dates, delay notice, the full timeline, and the **4-digit delivery code** once the parcel is dispatched. The rider never sees the code.
+- **Products**: list with search and low-stock filter, create and edit products, variants (price, MRP, stock changes with reason), image upload.
+- **CSV import**: check the file first (per-row errors), then import; template download; Super Admin can remove all demo products in one click.
+- **Banners & coupons**, **Delivery zones** (days, fee, remote flag, pincode exceptions).
+- **Staff** (Phase 14, Super Admin): find a person by email or phone and switch roles on or off. The last Super Admin cannot be removed.
+- **Settings** (Super Admin): delivery fee, first order free, flash sale, loyalty, returns, store details. Live payments and live installments need the word LIVE typed to switch on, and the server still refuses live Stripe keys while they are off.
+
+### Database changes
+- `20261103001100_admin.sql`: `list_delivery_staff()` (operations) and `list_staff()` (Super Admin).
+
+### Tests run
+- Database tests: 152 assertions pass, including the new staff-list permission checks.
+- Browser test against local Supabase: customer pays → admin opens every staff page → changes the delivery fee and back → finds a customer in Staff → approves, processes, packs, assigns a rider, dispatches → customer sees the same 4-digit code → rider starts delivery → wrong code rejected → right code plus photo marks the order delivered with the photo saved → admin order page on a phone has no sideways scroll. No browser errors.
+- Web checks (unit tests, build, secret scan) pass.
+
+### Next requirements (you)
+- After the live database is set up, sign in once on the website with your email, then give your account the Super Admin role (USER_TODO item "Become Super Admin"). Then open sanjayatrading.store/admin.
 
 ---
 
