@@ -72,8 +72,21 @@ function ProductView({ p }: { p: ProductDetail }) {
   const specs = Object.entries((p.specs ?? {}) as Record<string, string>).filter(([k]) => k !== 'Note')
   const monthly = Math.ceil(variant.price_paise * qty / (inst?.count ?? 6) / 100) * 100
 
+  // Structured data for search results (real price, stock and reviews only)
+  const prices = p.variants.map((v) => v.price_paise / 100)
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Product', name: p.name, sku: variant.sku,
+    ...(p.brand ? { brand: { '@type': 'Brand', name: p.brand } } : {}),
+    ...(p.short_description ? { description: p.short_description } : {}),
+    ...(p.images.length ? { image: p.images.map((i) => new URL(i.url, location.origin).href) } : {}),
+    offers: { '@type': 'AggregateOffer', priceCurrency: 'INR', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: p.variants.length,
+      availability: p.variants.some((v) => v.stock > 0) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' },
+    ...(p.rating_count > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: Number(p.rating_avg), reviewCount: p.rating_count } } : {}),
+  }
+
   return (
     <div className="container-x py-6 md:py-10">
+      <script type="application/ld+json">{JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
       <nav className="mb-5 flex flex-wrap items-center gap-1 text-xs text-navy-600/70" aria-label="Breadcrumb">
         <Link to="/" className="hover:text-gold-700">Home</Link>
         {p.category && <><ChevronRight className="size-3" /><Link to={`/c/${p.category.slug}`} className="hover:text-gold-700">{p.category.name}</Link></>}

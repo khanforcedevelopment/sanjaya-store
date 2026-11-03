@@ -429,3 +429,6 @@ enabled = true
 # Stripe calls this without a Supabase login; the function verifies Stripe's signature instead.
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false

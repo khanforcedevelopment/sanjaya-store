@@ -11,9 +11,15 @@ import { formatDateTime, formatDeliveryWindow } from '@/lib/format'
 import { STATUS_LABEL, statusTone } from '@/lib/orderStatus'
 import { useDocumentMeta } from '@/lib/meta'
 import { OrderTracking } from '@/features/orders/OrderTracking'
+import { usePublicSetting } from '@/features/catalog/api'
 
 /** Statuses from which the customer may cancel (matches order_status_transitions). */
 const CUSTOMER_CANCEL: string[] = ['payment_pending', 'awaiting_approval', 'order_confirmed']
+
+/** True while the return window is open. */
+function withinDays(iso: string, days: number) {
+  return Date.now() - new Date(iso).getTime() < days * 86_400_000
+}
 
 export function useOrder(id: string | undefined, poll = false) {
   return useQuery({
@@ -43,6 +49,16 @@ export function OrderPlacedPage() {
   useDocumentMeta({ title: o ? `Order ${o.order_number}` : 'Order', noindex: true })
   const qc = useQueryClient()
   const [cancelling, setCancelling] = useState(false)
+  const { data: returns } = usePublicSetting<{ window_days: number }>('returns')
+  const windowDays = returns?.window_days ?? 7
+  const requestReturn = async () => {
+    const reason = window.prompt('Why do you want to return this order? (for example: wrong size, damaged)')
+    if (!reason?.trim()) return
+    setCancelling(true); setPayError(null)
+    const { error } = await requireSupabase().rpc('transition_order', { p_order: id!, p_to: 'return_requested', p_note: `Return requested: ${reason.trim()}` })
+    setCancelling(false)
+    if (error) setPayError(friendlyError(error)); else qc.invalidateQueries({ queryKey: ['order', id] })
+  }
   const cancel = async () => {
     const reason = window.prompt('Cancel this order? Tell us why (optional):')
     if (reason === null) return
@@ -123,6 +139,7 @@ export function OrderPlacedPage() {
         <ButtonLink to="/" variant="outline">Continue shopping</ButtonLink>
         <ButtonLink to={`/account/support?order=${o.id}`} variant="ghost">Get help with this order</ButtonLink>
         {CUSTOMER_CANCEL.includes(o.status) && <Button variant="ghost" className="text-danger" loading={cancelling} onClick={cancel}>Cancel order</Button>}
+        {o.status === 'delivered' && o.delivered_at && withinDays(o.delivered_at, windowDays) && <Button variant="ghost" loading={cancelling} onClick={requestReturn}>Request a return</Button>}
       </div>
     </div>
   )
