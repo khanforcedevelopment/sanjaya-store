@@ -31,7 +31,7 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 
 ### Features completed
 
-- Full PostgreSQL schema for every phase (37 tables): identity, staff roles, addresses, catalogue, delivery zones and pincodes, coupons, banners, orders and timeline, payments, refunds, Stripe event log, delivery assignments/attempts/proof, installments, collections, KYC, referrals, rewards, loyalty, notifications, support tickets, audit log.
+- Full PostgreSQL schema for every phase (41 tables): identity, staff roles, addresses, catalogue, delivery zones and pincodes, coupons, banners, orders and timeline, payments, refunds, Stripe event log, delivery assignments/attempts/proof, installments, collections, KYC, referrals, rewards, loyalty, notifications, support tickets, audit log.
 - Row Level Security on every table; roles Super Admin, Operations, Delivery, Collections, Support (see docs/DATABASE.md for the permission table).
 - Server-side business logic as database functions: checkout quote, order placement with stock reservation, first-order-free delivery, ₹50 fee, pincode zones, coupons, order lifecycle with Super Admin approval, delivery with door code, payment recording with amount checks, refunds, unpaid-order expiry, six-installment schedules, eligibility rules, collections, KYC auto-decision with duplicate detection, Invite-5 rewards, loyalty points, verified reviews, notification queue, admin dashboard numbers.
 - Scheduled jobs (pg_cron) for order expiry and installment reminders.
