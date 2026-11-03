@@ -6,3 +6,6 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Public values only (safe in the browser). Never put service_role, sb_secret_ or Stripe secret keys here.
+  VITE_SUPABASE_URL = "https://relfyogreqynxnewacec.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlbGZ5b2dyZXF5bnhuZXdhY2VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3MTMyMTksImV4cCI6MjEwOTI4OTIxOX0.LPio0Ct_x-_T2PvZuQ0igpz-8QcoBpA3gkfV2wcwAcU"
