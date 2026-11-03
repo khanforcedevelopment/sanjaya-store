@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+/* Brand tokens. Final luxury palette and typography are designed in Phase 3. */
+@theme {
+  --color-navy-950: #070F24;
+  --color-navy-900: #0B1B3F;
+  --color-navy-800: #132A5C;
+  --color-navy-700: #1E3A78;
+  --color-gold-300: #E9D396;
+  --color-gold-400: #D9B865;
+  --color-gold-500: #C59B3C;
+  --color-gold-600: #A47C25;
+  --color-ivory: #FBF8F1;
+  --font-display: 'Georgia', 'Times New Roman', serif;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body { @apply bg-ivory text-navy-950 antialiased; }
