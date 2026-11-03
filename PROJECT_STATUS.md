@@ -9,10 +9,10 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 3 | VIP branding and homepage | ✅ Done, merged |
 | 4 | Product catalogue | ✅ Done, merged |
 | 5 | Customer authentication | ✅ Done, merged |
-| 6 | Cart and checkout | ✅ Done, merged (card payment connects in Phase 9) |
-| 7 | Delivery charges and serviceability | ✅ Done |
-| 8 | Customer GPS address | ✅ Done |
-| 9 | Stripe integration | Not started |
+| 6 | Cart and checkout | ✅ Done, merged |
+| 7 | Delivery charges and serviceability | ✅ Done, merged |
+| 8 | Customer GPS address | ✅ Done, merged |
+| 9 | Stripe integration | ✅ Done (test mode; live blocked until approved) |
 | 10 | Order approval system | Not started |
 | 11 | In-house delivery management | Not started |
 | 12 | Customer delivery tracking | Not started |
@@ -24,6 +24,35 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 | 18 | Referrals and promotions | Not started |
 | 19 | PWA, notifications and SEO | Not started |
 | 20 | Testing and Netlify launch | Not started |
+
+---
+
+## Phase 9 report: Stripe payments (test mode)
+
+### Features completed
+- After "Place order" the customer goes straight to Stripe's secure payment page (INR). If they close it, the order page shows "Pay now" until the payment window ends.
+- Returning from Stripe, the order page confirms the payment as soon as Stripe's notice arrives ("Payment received"), and the order moves to **Awaiting approval** for the Super Admin.
+- Server functions (Supabase Edge Functions, no third-party packages):
+  - `create-checkout`: checks the signed-in customer owns the order and that it is awaiting payment; the amount comes from the database, never the browser. Works for full payment and installments (Phase 15).
+  - `stripe-webhook`: verifies Stripe's signature, stores every event once (replays are ignored), checks the paid amount and currency match the order, records late payments for refund, and records refunds.
+  - `admin-refund`: Super Admin only; full or partial refunds with a reason, logged in the audit log.
+- Safety: live Stripe keys are refused until the Super Admin turns on live payments in settings. No Stripe secret is in the website or the repository.
+
+### Files
+- `supabase/functions/_shared/{http.ts,clients.ts}`, `supabase/functions/{create-checkout,stripe-webhook,admin-refund}/index.ts`, `supabase/config.toml` (webhook runs without a Supabase login).
+- `src/features/payments/startPayment.ts`, `src/pages/checkout/{CheckoutPage,OrderPlacedPage}.tsx`.
+
+### Database changes
+- None (payment functions from Phase 2).
+
+### Tests run
+- Against local Supabase and Stripe's official mock server: order placed → checkout session created → visitor without login refused (401) → signed webhook marks the order paid and "Awaiting approval" → same event replayed is ignored → forged signature rejected (400) → customer refund attempt refused (403) → Super Admin refund recorded and audited.
+- Browser: place order → redirected to Stripe → after the webhook the order page shows "Payment received". No console errors.
+- Web checks (31 unit tests, build, secret scan) and database tests pass.
+
+### Next requirements (you)
+- Stripe test keys and webhook, after Supabase is set up: DEPLOYMENT.md section E.
+- Ask Stripe in writing whether the UAE account may take INR payments from Indian customers (USER_TODO, before launch).
 
 ---
 
