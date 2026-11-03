@@ -7,6 +7,7 @@ import { pincodeQuery, usePincodeCheck } from '@/features/catalog/api'
 import { supabase } from '@/lib/supabase'
 import { INDIAN_STATES } from '@/lib/indianStates'
 import { formatDeliveryWindow } from '@/lib/format'
+import { LocationPicker, type PickedLocation } from '@/features/delivery/LocationPicker'
 import { addressSchema, type AddressDraft, type AddressValues } from './addresses'
 
 const LABELS = ['Home', 'Office', 'Other']
@@ -42,6 +43,18 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = 'Save a
     const state = INDIAN_STATES.find((s) => s.toLowerCase() === (c.state ?? '').toLowerCase())
     setV((prev) => ({ ...prev, city: prev.city || c.city || '', state: prev.state || state || '' }))
   }
+  const onLocation = (loc: PickedLocation | null) => {
+    if (!loc) { setV((p) => ({ ...p, latitude: null, longitude: null, location_source: 'manual' })); return }
+    const a = loc.address
+    const state = a?.state ? INDIAN_STATES.find((s) => s.toLowerCase() === a.state!.toLowerCase()) : undefined
+    setV((p) => ({
+      ...p, latitude: loc.latitude, longitude: loc.longitude, location_source: 'gps',
+      // fill only the fields the customer has not typed
+      street: p.street || a?.street || '', city: p.city || a?.city || '', state: p.state || state || '',
+      pincode: p.pincode || a?.pincode || '',
+    }))
+  }
+
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
       <div className="flex gap-2" role="radiogroup" aria-label="Address type">
@@ -50,6 +63,7 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = 'Save a
             className={`rounded-full border px-4 py-1.5 text-sm font-medium ${v.label === l ? 'border-gold-500 bg-gold-200/40 text-navy-900' : 'border-navy-100 text-navy-700'}`}>{l}</button>
         ))}
       </div>
+      <LocationPicker value={{ latitude: v.latitude, longitude: v.longitude }} onChange={onLocation} />
       <div className="grid gap-4 sm:grid-cols-2">
         <InputField label="Full name" autoComplete="name" value={v.recipient_name} onChange={(e) => set('recipient_name', e.target.value)} error={errors.recipient_name} />
         <InputField label="Mobile number" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="98765 43210" value={v.phone} onChange={(e) => set('phone', e.target.value)} error={errors.phone} hint="The rider will call this number." />

@@ -16,6 +16,7 @@ const WishlistPage = lazy(() => import('@/pages/account/WishlistPage').then((m) 
 const CartPage = lazy(() => import('@/pages/CartPage').then((m) => ({ default: m.CartPage })))
 const CheckoutPage = lazy(() => import('@/pages/checkout/CheckoutPage').then((m) => ({ default: m.CheckoutPage })))
 const OrderPlacedPage = lazy(() => import('@/pages/checkout/OrderPlacedPage').then((m) => ({ default: m.OrderPlacedPage })))
+const DeliveryPage = lazy(() => import('@/pages/DeliveryPage').then((m) => ({ default: m.DeliveryPage })))
 const CategoriesPage = lazy(() => import('@/pages/CategoriesPage').then((m) => ({ default: m.CategoriesPage })))
 
 /**
@@ -32,6 +33,7 @@ export const routes: RouteObject[] = [
       { path: 'deals', element: <ListingPage mode="deals" /> },
       { path: 'categories', element: <CategoriesPage /> },
       { path: 'p/:slug', element: <ProductPage /> },
+      { path: 'delivery', element: <DeliveryPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'checkout', element: <RequireAuth><CheckoutPage /></RequireAuth> },
       { path: 'order/:id', element: <RequireAuth><OrderPlacedPage /></RequireAuth> },
