@@ -1,6 +1,6 @@
 /* Sanjaya Store service worker: offline shell and fast repeat visits.
    Never caches API calls, payments or account data. */
-const VERSION = 'v1'
+const VERSION = 'v2'
 const SHELL = `shell-${VERSION}`
 const ASSETS = `assets-${VERSION}`
 const IMAGES = `images-${VERSION}`
