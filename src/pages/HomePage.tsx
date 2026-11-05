@@ -44,6 +44,12 @@ const FALLBACK_HERO: Banner = {
 
 /** Looping background films for hero images that have one (same name, .mp4). */
 const HERO_VIDEOS: Record<string, string> = { '/brand/hero/festive.webp': '/brand/hero/festive.mp4' }
+/** The original demo banners used small illustrations; show the full hero photos for them instead. */
+const HERO_ART: Record<string, string> = {
+  '/demo/saree-crimson.svg': '/brand/hero/festive.webp',
+  '/demo/laptop-silver.svg': '/brand/hero/electronics.webp',
+  '/demo/handbag-cognac.svg': '/brand/hero/gift.webp',
+}
 const SLIDE_MS = 7000
 
 function prefersReducedMotion() {
@@ -119,7 +125,7 @@ function Hero() {
 }
 
 function HeroMedia({ banner, active }: { banner: Banner; active: boolean }) {
-  const src = banner.image_url
+  const src = banner.image_url ? (HERO_ART[banner.image_url] ?? banner.image_url) : null
   const video = src ? HERO_VIDEOS[src] : undefined
   const ref = useRef<HTMLVideoElement>(null)
   const [canVideo] = useState(() => !!video && !prefersReducedMotion())
