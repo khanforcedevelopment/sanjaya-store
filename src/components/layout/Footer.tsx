@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Truck, ShieldCheck, RotateCcw, CreditCard } from 'lucide-react'
 import { Wordmark } from '@/components/brand/Logo'
+import { AppBadges } from '@/components/brand/AppBadges'
 import { business } from '@/config/business'
 
 const perks = [
@@ -27,6 +28,8 @@ export function Footer() {
         <div className="md:col-span-1">
           <Wordmark />
           <p className="mt-4 text-sm leading-relaxed">Electronics, fashion and lifestyle, delivered across India by our own team from Mumbai.</p>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Get the app</p>
+          <AppBadges className="mt-3 [&_button]:h-12 [&_button]:min-w-36" />
         </div>
         <FooterCol title="Shop" links={[['Mobile phones', '/c/mobiles'], ['Laptops & tablets', '/c/laptops-tablets'], ['Ethnic fashion', '/c/ethnic-wear'], ['Watches', '/c/watches'], ['Deals', '/deals']]} />
         <FooterCol title="Help" links={[['Track an order', '/account/orders'], ['Delivery & pincodes', '/delivery'], ['Returns & refunds', '/policies/returns'], ['Installment plans', '/installments'], ['Contact us', '/contact']]} />

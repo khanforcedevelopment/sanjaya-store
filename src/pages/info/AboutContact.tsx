@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Download, Mail, MessageCircle, Phone, Share, Smartphone } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Mail, MessageCircle, Phone, Smartphone } from 'lucide-react'
 import { InfoPage } from './InfoLayout'
+import { AppBadges } from '@/components/brand/AppBadges'
 import { useStore } from './useStore'
 
 export function AboutPage() {
@@ -32,29 +31,11 @@ export function ContactPage() {
   )
 }
 
-type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
-
 export function InstallPage() {
-  const [evt, setEvt] = useState<InstallEvent | null>(null)
-  const [installed, setInstalled] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches)
-  useEffect(() => {
-    const onPrompt = (e: Event) => { e.preventDefault(); setEvt(e as InstallEvent) }
-    const onInstalled = () => setInstalled(true)
-    window.addEventListener('beforeinstallprompt', onPrompt)
-    window.addEventListener('appinstalled', onInstalled)
-    return () => { window.removeEventListener('beforeinstallprompt', onPrompt); window.removeEventListener('appinstalled', onInstalled) }
-  }, [])
-  const ios = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent)
   return (
-    <InfoPage title="Install the app" description="Add Sanjaya Store to your home screen for one-tap shopping.">
-      <div className="flex items-center gap-4"><img src="/icons/icon-192.png" alt="" className="size-16 rounded-2xl" /><p>Shop faster with the Sanjaya Store app: opens from your home screen, works on slow networks and takes almost no space.</p></div>
-      {installed ? <p className="font-semibold text-success">The app is installed on this device.</p> : evt ? (
-        <Button size="lg" onClick={async () => { await evt.prompt(); const r = await evt.userChoice; if (r.outcome === 'accepted') setInstalled(true); setEvt(null) }}><Download className="size-5" /> Install Sanjaya Store</Button>
-      ) : ios ? (
-        <ol className="list-decimal space-y-1 pl-5"><li>Open this page in <strong>Safari</strong>.</li><li>Tap <Share className="inline size-4" /> <strong>Share</strong>.</li><li>Choose <strong>Add to Home Screen</strong>.</li></ol>
-      ) : (
-        <ol className="list-decimal space-y-1 pl-5"><li>Open this page in <strong>Chrome</strong>.</li><li>Tap the <strong>⋮</strong> menu.</li><li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li></ol>
-      )}
+    <InfoPage title="Install the app" description="Add Sanjaya Store to your phone for one-tap shopping.">
+      <div className="flex items-center gap-4"><img src="/icons/icon-192.png" alt="" className="size-16 rounded-2xl" /><p>Shop faster with the Sanjaya Store app: opens from your home screen, works on slow networks and takes almost no space. Free, no app store needed.</p></div>
+      <AppBadges className="not-prose" />
     </InfoPage>
   )
 }
