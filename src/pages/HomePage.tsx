@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronLeft, ChevronRight, Gift, Truck, CalendarClock, Zap } from 'lucide-react'
 import { ButtonLink } from '@/components/ui/Button'
 import { SectionHeading, Skeleton } from '@/components/ui/misc'
-import { Monogram } from '@/components/brand/Logo'
 import { useBanners, useCategories, usePublicSetting, type Banner } from '@/features/catalog/api'
 import { ProductRail } from '@/features/catalog/ProductRail'
 import { categoryArt } from '@/features/catalog/categoryArt'
@@ -39,63 +38,111 @@ export function HomePage() {
 const FALLBACK_HERO: Banner = {
   id: 'fallback', placement: 'hero', eyebrow: 'Sanjaya Store', title: 'Luxury, delivered across India',
   subtitle: 'Electronics, fashion, footwear, watches, bags and lifestyle, dispatched from Mumbai.',
-  cta_label: null, cta_href: null, image_url: null, theme: 'navy', sort_order: 0, is_active: true,
+  cta_label: null, cta_href: null, image_url: '/brand/hero/festive.webp', theme: 'navy', sort_order: 0, is_active: true,
   starts_at: null, ends_at: null, created_at: '',
+}
+
+/** Looping background films for hero images that have one (same name, .mp4). */
+const HERO_VIDEOS: Record<string, string> = { '/brand/hero/festive.webp': '/brand/hero/festive.mp4' }
+const SLIDE_MS = 7000
+
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 }
 
 function Hero() {
   const { data, isLoading } = useBanners('hero')
   const slides = data?.length ? data : [FALLBACK_HERO]
   const [i, setI] = useState(0)
+  const [paused, setPaused] = useState(false)
   const n = slides.length
   useEffect(() => {
-    if (n < 2) return
-    const t = setInterval(() => setI((x) => (x + 1) % n), 6500)
+    if (n < 2 || paused) return
+    const t = setInterval(() => setI((x) => (x + 1) % n), SLIDE_MS)
     return () => clearInterval(t)
-  }, [n])
-  const s = slides[i % n]!
+  }, [n, paused, i])
+  const cur = i % n
+  const s = slides[cur]!
   const light = s.theme === 'ivory'
 
-  if (isLoading && isBackendConfigured) return <Skeleton className="h-[480px] rounded-none" />
+  if (isLoading && isBackendConfigured) return <Skeleton className="h-[560px] rounded-none md:h-[640px]" />
 
   return (
-    <section className={cn('relative overflow-hidden', light ? 'bg-ivory text-navy-900' : 'bg-navy-950 text-white')} aria-roledescription="carousel" aria-label="Featured">
-      {!light && <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_30%,rgba(216,180,92,0.22),transparent_55%),radial-gradient(ellipse_at_10%_90%,rgba(42,74,135,0.55),transparent_60%)]" />}
-      <div className="container-x relative grid min-h-[440px] items-center gap-8 py-12 md:min-h-[520px] md:grid-cols-[1.1fr_0.9fr] md:py-16">
-        <div key={s.id} className="animate-[fadeUp_0.7s_ease-out]">
-          {s.eyebrow && <p className="eyebrow">{s.eyebrow}</p>}
-          <h1 className={cn('mt-3 font-display text-[2.6rem] font-semibold leading-[1.02] sm:text-6xl lg:text-7xl', !light && 'text-white')}>
+    <section
+      className={cn('relative isolate overflow-hidden transition-colors duration-700', light ? 'bg-ivory text-navy-900' : 'bg-navy-950 text-white')}
+      aria-roledescription="carousel" aria-label="Featured"
+      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
+    >
+      {slides.map((b, k) => (
+        <HeroMedia key={b.id} banner={b} active={k === cur} />
+      ))}
+      <div className={cn('pointer-events-none absolute inset-0 -z-0 transition-opacity duration-700',
+        light
+          ? 'bg-[linear-gradient(90deg,rgba(251,249,244,0.97)_0%,rgba(251,249,244,0.85)_38%,rgba(251,249,244,0.1)_70%,transparent_100%)] max-md:bg-[linear-gradient(0deg,rgba(251,249,244,0.98)_35%,rgba(251,249,244,0.6)_65%,rgba(251,249,244,0.1)_100%)]'
+          : 'bg-[linear-gradient(90deg,rgba(5,12,31,0.96)_0%,rgba(5,12,31,0.8)_35%,rgba(5,12,31,0.15)_70%,transparent_100%)] max-md:bg-[linear-gradient(0deg,rgba(5,12,31,0.98)_35%,rgba(5,12,31,0.55)_65%,rgba(5,12,31,0.15)_100%)]')} />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px gold-rule" />
+
+      <div className="container-x relative flex min-h-[560px] flex-col justify-end py-14 md:min-h-[640px] md:justify-center md:py-20">
+        <div key={s.id} className="max-w-xl animate-[fadeUp_0.8s_ease-out]">
+          {s.eyebrow && (
+            <p className="eyebrow flex items-center gap-3">
+              <span className="h-px w-10 bg-gradient-to-r from-transparent to-gold-500" />{s.eyebrow}
+            </p>
+          )}
+          <h1 className={cn('mt-4 font-display text-[2.7rem] font-semibold leading-[1.02] drop-shadow-sm sm:text-6xl lg:text-[4.6rem]', !light && 'text-white')}>
             {s.title}
           </h1>
-          {s.subtitle && <p className={cn('mt-5 max-w-xl text-base sm:text-lg', light ? 'text-navy-700' : 'text-white/75')}>{s.subtitle}</p>}
+          {s.subtitle && <p className={cn('mt-5 max-w-lg text-base sm:text-lg', light ? 'text-navy-700' : 'text-white/80')}>{s.subtitle}</p>}
           <div className="mt-8 flex flex-wrap gap-3">
             {s.cta_label && s.cta_href && <ButtonLink to={s.cta_href} size="lg">{s.cta_label} <ArrowRight className="size-4" /></ButtonLink>}
             <ButtonLink to="/deals" size="lg" variant={light ? 'outline' : 'light'}>Today&rsquo;s deals</ButtonLink>
           </div>
         </div>
-        <div className="relative mx-auto hidden aspect-square w-full max-w-md md:block">
-          <div className="absolute inset-0 rounded-full border border-gold-400/30" />
-          <div className="absolute inset-6 rounded-full border border-gold-400/20" />
-          {s.image_url ? (
-            <img key={s.image_url} src={s.image_url} alt="" className="absolute inset-10 size-[calc(100%-5rem)] rounded-full object-cover shadow-2xl animate-[fadeIn_0.9s_ease-out]" />
-          ) : (
-            <Monogram className="absolute inset-16" />
-          )}
-        </div>
-      </div>
-      {n > 1 && (
-        <div className="container-x relative flex items-center gap-3 pb-6">
-          <button onClick={() => setI((x) => (x - 1 + n) % n)} className="grid size-9 place-items-center rounded-full border border-current/20 opacity-70 hover:opacity-100" aria-label="Previous slide"><ChevronLeft className="size-4" /></button>
-          <div className="flex gap-2">
-            {slides.map((b, k) => (
-              <button key={b.id} onClick={() => setI(k)} aria-label={`Slide ${k + 1}`} aria-current={k === i}
-                className={cn('h-1.5 rounded-full transition-all', k === i ? 'w-8 bg-gold-400' : 'w-3 bg-current opacity-30')} />
-            ))}
+
+        {n > 1 && (
+          <div className="mt-10 flex items-center gap-4 md:absolute md:bottom-8 md:left-auto md:mt-0">
+            <button onClick={() => setI((x) => (x - 1 + n) % n)} className="grid size-10 place-items-center rounded-full border border-current/25 backdrop-blur-sm opacity-80 hover:border-gold-400 hover:opacity-100" aria-label="Previous slide"><ChevronLeft className="size-4" /></button>
+            <div className="flex gap-2">
+              {slides.map((b, k) => (
+                <button key={b.id} onClick={() => setI(k)} aria-label={`Slide ${k + 1}`} aria-current={k === cur}
+                  className="relative h-1 w-10 overflow-hidden rounded-full bg-current/25 sm:w-14">
+                  {k === cur && <span key={`${i}-${paused}`} className={cn('absolute inset-y-0 left-0 rounded-full bg-gold-400', paused ? 'w-full' : 'animate-[heroProgress_linear_forwards]')} style={{ animationDuration: `${SLIDE_MS}ms` }} />}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setI((x) => (x + 1) % n)} className="grid size-10 place-items-center rounded-full border border-current/25 backdrop-blur-sm opacity-80 hover:border-gold-400 hover:opacity-100" aria-label="Next slide"><ChevronRight className="size-4" /></button>
           </div>
-          <button onClick={() => setI((x) => (x + 1) % n)} className="grid size-9 place-items-center rounded-full border border-current/20 opacity-70 hover:opacity-100" aria-label="Next slide"><ChevronRight className="size-4" /></button>
-        </div>
-      )}
+        )}
+      </div>
     </section>
+  )
+}
+
+function HeroMedia({ banner, active }: { banner: Banner; active: boolean }) {
+  const src = banner.image_url
+  const video = src ? HERO_VIDEOS[src] : undefined
+  const ref = useRef<HTMLVideoElement>(null)
+  const [canVideo] = useState(() => !!video && !prefersReducedMotion())
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    try {
+      if (active) { v.currentTime = 0; v.play()?.catch(() => {}) } else v.pause()
+    } catch { /* autoplay blocked: the poster image stays */ }
+  }, [active])
+  if (!src) return null
+  const small = src.startsWith('/brand/hero/') ? src.replace(/\.webp$/, '-sm.webp') : null
+  return (
+    <div aria-hidden className={cn('absolute inset-0 -z-10 transition-opacity duration-1000 ease-out', active ? 'opacity-100' : 'opacity-0')}>
+      {canVideo ? (
+        <video ref={ref} src={video} poster={src} muted loop playsInline preload={active ? 'auto' : 'metadata'}
+          className="size-full object-cover object-[70%_center]" />
+      ) : (
+        <img src={src} srcSet={small ? `${small} 768w, ${src} 1344w` : undefined} sizes="100vw" alt=""
+          fetchPriority={active ? 'high' : 'low'}
+          className={cn('size-full object-cover object-[70%_center]', active && 'animate-[kenBurns_9s_ease-out_forwards]')} />
+      )}
+    </div>
   )
 }
 
