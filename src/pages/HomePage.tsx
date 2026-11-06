@@ -232,13 +232,13 @@ function PromoPair() {
         const light = b.theme === 'ivory'
         return (
           <Link key={b.id} to={b.cta_href ?? '/'} className={cn('group relative flex min-h-60 overflow-hidden rounded-3xl p-8', light ? 'bg-[#F3ECDD] text-navy-900' : 'bg-navy-900 text-white')}>
-            <div className="relative z-10 max-w-[60%]">
+            <div className="relative z-10 max-w-[58%]">
               {b.eyebrow && <p className="eyebrow">{b.eyebrow}</p>}
               <h3 className="mt-2 font-display text-3xl font-semibold leading-tight">{b.title}</h3>
               {b.subtitle && <p className={cn('mt-2 text-sm', light ? 'text-navy-700' : 'text-white/70')}>{b.subtitle}</p>}
               <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-gold-600 group-hover:gap-2">{b.cta_label ?? 'Shop now'} <ArrowRight className="size-4" /></span>
             </div>
-            {b.image_url && <img src={b.image_url} alt="" loading="lazy" className="absolute -right-6 bottom-0 top-0 my-auto aspect-square h-[115%] rounded-full object-cover opacity-95 transition duration-700 group-hover:scale-105" />}
+            {b.image_url && <img src={b.image_url} alt="" loading="lazy" className={cn('absolute right-4 top-1/2 size-32 -translate-y-1/2 rounded-full border-4 bg-white object-cover shadow-lg transition duration-700 group-hover:scale-105 sm:right-6 sm:size-44 lg:size-52', light ? 'border-white' : 'border-gold-400/60')} />}
           </Link>
         )
       })}
