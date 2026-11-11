@@ -7,7 +7,7 @@ select tests.eq((search_products(p_category => 'ethnic-wear')->'facets'->>'total
 select tests.eq((search_products(p_sort => 'price_asc')->'items'->0->>'slug'), 'test-saree', 'sort by price ascending');
 select tests.eq((search_products(p_brands => array['Acme'])->'facets'->>'total')::int, 2, 'brand filter');
 select tests.eq((search_products(p_max_paise => 500000)->'facets'->>'total')::int, 1, 'price filter');
-select tests.throws($$select preview_or_import_products('[]', true)$$, 'not allowed', 'visitors cannot import');
+select tests.throws($$select preview_or_import_products('[]', true)$$, 'not allowed|permission denied', 'visitors cannot import');
 
 set role authenticated; select tests.as_user(tests.id('ops'));
 select tests.eq((preview_or_import_products('[{"product_slug":"new-kurta","product_name":"New Kurta","category_slug":"men","sku":"NK-M","variant_name":"M","options":{"size":"M"},"price_aed":"999","mrp_rupees":"1299","stock":"5","image_urls":"https://example.com/a.jpg|https://example.com/b.jpg"},{"product_slug":"new-kurta","category_slug":"men","sku":"NK-L","variant_name":"L","price_aed":"999","stock":"3"}]', true)->>'new_products')::int, 1, 'dry run reports what would be created');
