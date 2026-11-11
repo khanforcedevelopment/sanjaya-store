@@ -60,15 +60,20 @@ export function useCategories() {
 }
 
 export type Banner = Tables<'banners'>
+/** Banners inside their schedule window (start and end are optional). */
+export function liveBanners<T extends Pick<Banner, 'is_active' | 'starts_at' | 'ends_at'>>(rows: T[], now = Date.now()): T[] {
+  return rows.filter((b) => b.is_active && (!b.starts_at || Date.parse(b.starts_at) <= now) && (!b.ends_at || Date.parse(b.ends_at) > now))
+}
 export function useBanners(placement: 'hero' | 'strip' | 'promo') {
   return useQuery({
     queryKey: ['banners', placement],
     enabled: !!supabase,
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const { data, error } = await requireSupabase().from('banners').select('*').eq('placement', placement).order('sort_order')
+      // Staff can read switched-off banners too (for the admin screens), so the storefront filters them out itself
+      const { data, error } = await requireSupabase().from('banners').select('*').eq('placement', placement).eq('is_active', true).order('sort_order')
       if (error) throw error
-      return data
+      return liveBanners(data)
     },
   })
 }
