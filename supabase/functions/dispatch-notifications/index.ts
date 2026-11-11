@@ -2,17 +2,12 @@
 // Only the service role may call it. Without RESEND_API_KEY nothing is sent and emails stay queued.
 import { Db } from '../_shared/clients.ts'
 import { renderEmail } from '../_shared/emails.ts'
+import { hasServerKey } from '../_shared/http.ts'
 
 interface Row { id: number; user_id: string | null; channel: string; template: string; payload: Record<string, unknown>; attempts: number; created_at: string }
 
-function isServiceRole(req: Request) {
-  const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
-  if (token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) return true
-  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).role === 'service_role' } catch { return false }
-}
-
 Deno.serve(async (req) => {
-  if (!isServiceRole(req)) return new Response('Forbidden', { status: 403 })
+  if (!hasServerKey(req)) return new Response('Forbidden', { status: 403 })
   const key = Deno.env.get('RESEND_API_KEY')
   const from = Deno.env.get('EMAIL_FROM') // e.g. "Sanjaya Store <orders@sanjayatrading.store>"
   if (!key || !from) return Response.json({ sent: 0, note: 'RESEND_API_KEY or EMAIL_FROM not set; emails stay queued' })

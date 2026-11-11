@@ -4,6 +4,7 @@
 // rows that already point at our storage or at a site path ("/...") are skipped.
 import { Db, DbError } from '../_shared/clients.ts'
 import { corsHeaders, json, requireEnv } from '../_shared/http.ts'
+import { assertPublicHttpsUrl, isPrivateIp, parseHostList } from '../_shared/url-guard.ts'
 
 const MAX_BYTES = 10 * 1024 * 1024
 const MAX_SLUGS = 25
@@ -28,22 +29,62 @@ async function sha(text: string) {
   return [...d.slice(0, 10)].map((x) => x.toString(16).padStart(2, '0')).join('')
 }
 
+const MAX_REDIRECTS = 3
+// Optional: IMAGE_HOST_ALLOWLIST="ourshopee.com,cdn.example.com" limits downloads to those domains.
+const ALLOW_HOSTS = parseHostList(Deno.env.get('IMAGE_HOST_ALLOWLIST'))
+
+/** Refuses host names that resolve to a private or internal address (DNS check, best effort). */
+async function assertResolvesPublic(host: string) {
+  const resolve = (Deno as unknown as { resolveDns?: (h: string, t: 'A' | 'AAAA') => Promise<string[]> }).resolveDns
+  if (!resolve) return
+  const ips = (await Promise.all([resolve(host, 'A').catch(() => []), resolve(host, 'AAAA').catch(() => [])])).flat()
+  if (ips.some(isPrivateIp)) throw new Error('link points to an internal address')
+}
+
+async function readCapped(res: Response): Promise<Uint8Array<ArrayBuffer>> {
+  const reader = res.body?.getReader()
+  if (!reader) return new Uint8Array()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.length
+    if (size > MAX_BYTES) { await reader.cancel(); throw new Error('image is larger than 10 MB') }
+    chunks.push(value)
+  }
+  const out = new Uint8Array(size)
+  let o = 0
+  for (const c of chunks) { out.set(c, o); o += c.length }
+  return out
+}
+
 async function download(url: string) {
-  const res = await fetch(url, {
-    redirect: 'follow',
-    signal: AbortSignal.timeout(20_000),
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SanjayaStoreImageImport/1.0)', Accept: 'image/avif,image/webp,image/jpeg,image/png,image/*' },
-  })
-  if (!res.ok) throw new Error(`supplier server answered ${res.status}`)
-  if (Number(res.headers.get('content-length') ?? 0) > MAX_BYTES) throw new Error('image is larger than 10 MB')
-  const body = new Uint8Array(await res.arrayBuffer())
-  if (body.length > MAX_BYTES) throw new Error('image is larger than 10 MB')
+  // Follow redirects by hand so every hop is checked (a public link must not bounce to an internal one).
+  let target = assertPublicHttpsUrl(url, ALLOW_HOSTS)
+  let res: Response | null = null
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    await assertResolvesPublic(target.hostname)
+    res = await fetch(target, {
+      redirect: 'manual',
+      signal: AbortSignal.timeout(20_000),
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SanjayaStoreImageImport/1.0)', Accept: 'image/avif,image/webp,image/jpeg,image/png,image/*' },
+    })
+    if (res.status < 300 || res.status > 399) break
+    const next = res.headers.get('location')
+    await res.body?.cancel()
+    if (!next || hop === MAX_REDIRECTS) throw new Error('too many redirects')
+    target = assertPublicHttpsUrl(new URL(next, target).href, ALLOW_HOSTS)
+  }
+  if (!res || !res.ok) throw new Error(`supplier server answered ${res?.status ?? 'nothing'}`)
+  if (Number(res.headers.get('content-length') ?? 0) > MAX_BYTES) { await res.body?.cancel(); throw new Error('image is larger than 10 MB') }
+  const body = await readCapped(res)
   const kind = sniff(body)
   if (!kind) throw new Error('link did not return a JPG, PNG, WebP, GIF or AVIF image')
   return { body, ...kind }
 }
 
-async function upload(path: string, body: Uint8Array, type: string) {
+async function upload(path: string, body: Uint8Array<ArrayBuffer>, type: string) {
   const key = requireEnv('SUPABASE_SERVICE_ROLE_KEY')
   const res = await fetch(`${requireEnv('SUPABASE_URL')}/storage/v1/object/${BUCKET}/${path}`, {
     method: 'POST',
