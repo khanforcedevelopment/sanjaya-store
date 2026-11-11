@@ -15,6 +15,7 @@ const SAMPLE = [
   ['cotton-kurta-navy', '', '', 'men', '', '', '', '', 'CK-NAVY-L', 'L', 'L', 'Navy', '', '1299', '1599', '8', ''],
 ]
 
+interface Copy { copied: number; failed: { product_slug: string; url: string; error: string }[] }
 interface Result { dry_run?: boolean; errors: { row: number; error: string }[]; new_products: number; new_variants: number; updated_variants: number }
 
 function toRow(r: Record<string, string>) {
@@ -34,9 +35,11 @@ export function AdminImport() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [demo, setDemo] = useState<string | null>(null)
+  const [copy, setCopy] = useState<Copy | null>(null)
+  const [copying, setCopying] = useState(false)
 
   const load = async (f: File | undefined) => {
-    setResult(null); setErr(null)
+    setResult(null); setErr(null); setCopy(null)
     if (!f) return
     if (f.size > 5 * 1024 * 1024) return setErr('Please split files larger than 5 MB.')
     const parsed = csvToObjects(await f.text())
@@ -50,7 +53,22 @@ export function AdminImport() {
     setBusy(false)
     if (error) return setErr(friendlyError(error))
     setResult(data as unknown as Result)
-    if (!dry) qc.invalidateQueries()
+    if (!dry) { qc.invalidateQueries(); await copyImages() }
+  }
+  // Supplier image links are downloaded and saved in our own storage, so the shop never hotlinks them.
+  const copyImages = async () => {
+    const slugs = [...new Set((rows as Record<string, unknown>[]).filter((r) => r.image_urls).map((r) => String(r.product_slug)))]
+    if (!slugs.length) return
+    setCopying(true)
+    const total: Copy = { copied: 0, failed: [] }
+    for (let i = 0; i < slugs.length; i += 10) {
+      const { data, error } = await requireSupabase().functions.invoke<Copy & { error?: string }>('rehost-images', { body: { product_slugs: slugs.slice(i, i + 10) } })
+      if (error || !data || data.error) {
+        total.failed.push(...slugs.slice(i, i + 10).map((s) => ({ product_slug: s, url: '', error: data?.error ?? 'could not reach the image copier' })))
+      } else { total.copied += data.copied; total.failed.push(...data.failed) }
+      setCopy({ ...total })
+    }
+    setCopying(false); qc.invalidateQueries()
   }
   const template = () => {
     const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
@@ -75,6 +93,7 @@ export function AdminImport() {
         <ul className="list-disc space-y-1 pl-5 text-sm text-navy-700">
           <li>Rows with the same <code>product_slug</code> become one product with several variants. Existing SKUs are updated (price, MRP, stock, name).</li>
           <li><code>category_slug</code> must match a category (e.g. mobile-phones, men, women, sarees, watches). Separate tags and image links with <code>|</code>.</li>
+          <li><code>image_urls</code>: direct https links to JPG, PNG or WebP photos. After import the photos are downloaded and saved on our own storage.</li>
           <li>Use photos you own or have permission to use. New products go live straight away; set <code>is_active</code> to false to keep one hidden.</li>
         </ul>
         <label className="flex cursor-pointer items-center gap-3 rounded-2xl border-2 border-dashed border-navy-200 p-5 hover:border-gold-500">
@@ -93,6 +112,20 @@ export function AdminImport() {
               {result.new_products} new products, {result.new_variants} new variants, {result.updated_variants} updated variants.
               {result.errors.length ? ` ${result.errors.length} rows need fixing; nothing will be imported until they are fixed.` : ''}
             </Alert>
+            {!result.dry_run && (copying || copy) && (
+              <Alert tone={copying ? 'info' : copy?.failed.length ? 'error' : 'success'} title="Product photos">
+                {copying ? 'Copying photos from the supplier links to our storage…' : `${copy?.copied ?? 0} photos copied to our storage.`}
+                {!copying && copy?.failed.length ? ` ${copy.failed.length} could not be copied (still shown from the supplier link).` : ''}
+              </Alert>
+            )}
+            {!copying && copy && copy.failed.length > 0 && (
+              <>
+                <Table head={['Product', 'Link', 'Problem']}>
+                  {copy.failed.slice(0, 200).map((f, i) => <tr key={i}><Td>{f.product_slug}</Td><Td className="max-w-xs truncate">{f.url}</Td><Td>{f.error}</Td></tr>)}
+                </Table>
+                <Button size="sm" variant="outline" onClick={copyImages}>Try copying photos again</Button>
+              </>
+            )}
             {result.errors.length > 0 && (
               <Table head={['Row', 'Problem']}>
                 {result.errors.slice(0, 200).map((e) => <tr key={e.row}><Td>{e.row + 1}</Td><Td>{e.error}</Td></tr>)}
