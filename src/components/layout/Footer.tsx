@@ -5,7 +5,7 @@ import { AppBadges } from '@/components/brand/AppBadges'
 import { business } from '@/config/business'
 
 const perks = [
-  { icon: Truck, title: 'Free first delivery', text: 'Then ₹50 per order' },
+  { icon: Truck, title: 'Free first delivery', text: `Then ${business.deliveryFeeLabel} per order` },
   { icon: ShieldCheck, title: 'Secure payments', text: 'Card payments by Stripe' },
   { icon: RotateCcw, title: '7-day returns', text: 'On eligible items' },
   { icon: CreditCard, title: '6 easy installments', text: 'On selected categories' },
@@ -27,17 +27,17 @@ export function Footer() {
       <div className="container-x grid gap-10 py-12 md:grid-cols-4">
         <div className="md:col-span-1">
           <Wordmark />
-          <p className="mt-4 text-sm leading-relaxed">Electronics, fashion and lifestyle, delivered across India by our own team from Mumbai.</p>
+          <p className="mt-4 text-sm leading-relaxed">Kitchen, electronics and accessories, delivered to all seven emirates of the UAE.</p>
           <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Get the app</p>
           <AppBadges className="mt-3 [&_button]:h-12 [&_button]:min-w-36" />
         </div>
-        <FooterCol title="Shop" links={[['Mobile phones', '/c/mobiles'], ['Laptops & tablets', '/c/laptops-tablets'], ['Ethnic fashion', '/c/ethnic-wear'], ['Watches', '/c/watches'], ['Deals', '/deals']]} />
-        <FooterCol title="Help" links={[['Track an order', '/account/orders'], ['Delivery & pincodes', '/delivery'], ['Returns & refunds', '/policies/returns'], ['Installment plans', '/installments'], ['Contact us', '/contact']]} />
+        <FooterCol title="Shop" links={[['Kitchen & dining', '/c/kitchen-dining'], ['Electronics', '/c/electronics'], ['Accessories', '/c/accessories'], ['Deals', '/deals']]} />
+        <FooterCol title="Help" links={[['Track an order', '/account/orders'], ['Delivery areas', '/delivery'], ['Returns & refunds', '/policies/returns'], ['Installment plans', '/installments'], ['Contact us', '/contact']]} />
         <FooterCol title="Company" links={[['About us', '/about'], ['Terms & conditions', '/policies/terms'], ['Privacy policy', '/policies/privacy'], ['Shipping policy', '/policies/shipping'], ['Install the app', '/install']]} />
       </div>
       <div className="border-t border-white/10">
         <div className="container-x flex flex-col gap-2 py-5 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} {business.legalName}. All prices in INR, inclusive of taxes.</p>
+          <p>© {new Date().getFullYear()} {business.legalName}. All prices in AED, inclusive of 5% VAT.</p>
           <p>Support: <a className="text-gold-300 hover:underline" href={`mailto:${business.supportEmail}`}>{business.supportEmail}</a></p>
         </div>
       </div>

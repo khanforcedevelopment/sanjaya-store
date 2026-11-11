@@ -1,8 +1,9 @@
+import { emirateName, isEmirateCode } from '@/lib/emirates'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Badge, Skeleton } from '@/components/ui/misc'
 import { requireSupabase } from '@/lib/supabase'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { formatDateTime } from '@/lib/format'
 import { STATUS_LABEL, statusTone } from '@/lib/orderStatus'
 import type { OrderStatus } from '@/lib/types'
@@ -27,7 +28,7 @@ export function AdminOrders() {
         .order('created_at', { ascending: false }).limit(100)
       if (status) query = query.eq('status', status as OrderStatus)
       if (delayed) query = query.eq('is_delayed', true)
-      if (q) query = /^\d{6}$/.test(q) ? query.eq('pincode', q) : query.ilike('order_number', `%${q}%`)
+      if (q) query = isEmirateCode(q) ? query.eq('pincode', q) : query.ilike('order_number', `%${q}%`)
       const { data, error } = await query
       if (error) throw error
       return data
@@ -38,7 +39,7 @@ export function AdminOrders() {
   return (
     <>
       <AdminTitle title="Orders">
-        <input className="input h-9 w-56" placeholder="Order no. or pincode" defaultValue={q} onKeyDown={(e) => e.key === 'Enter' && set('q', (e.target as HTMLInputElement).value.trim().toUpperCase())} aria-label="Search orders" />
+        <input className="input h-9 w-56" placeholder="Order no. or emirate (DXB)" defaultValue={q} onKeyDown={(e) => e.key === 'Enter' && set('q', (e.target as HTMLInputElement).value.trim().toUpperCase())} aria-label="Search orders" />
       </AdminTitle>
       <div className="scrollbar-none mb-4 flex gap-2 overflow-x-auto">
         {FILTERS.map(([v, l]) => (
@@ -47,14 +48,14 @@ export function AdminOrders() {
         <button onClick={() => set('delayed', delayed ? '' : '1')} className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-sm ${delayed ? 'border-danger bg-danger text-white' : 'border-navy-100 bg-white'}`}>Delayed</button>
       </div>
       {isLoading ? <Skeleton className="h-64" /> : (
-        <Table head={['Order', 'Placed', 'Customer', 'Pincode', 'Total', 'Status']} empty={!data?.length}>
+        <Table head={['Order', 'Placed', 'Customer', 'Emirate', 'Total', 'Status']} empty={!data?.length}>
           {data?.map((o) => (
             <tr key={o.id} className="hover:bg-gold-200/10">
               <Td><Link to={`/admin/orders/${o.id}`} className="font-semibold text-navy-900 hover:text-gold-700">{o.order_number}</Link>{o.payment_mode === 'installment' && <Badge tone="gold" className="ml-2">6×</Badge>}</Td>
               <Td>{formatDateTime(o.created_at)}</Td>
               <Td>{(o.shipping_address as { recipient_name?: string }).recipient_name}</Td>
-              <Td>{o.pincode}</Td>
-              <Td>{formatINR(o.total_paise)}{o.amount_paid_paise < o.total_paise && o.amount_paid_paise > 0 && <span className="block text-xs text-navy-600">paid {formatINR(o.amount_paid_paise)}</span>}</Td>
+              <Td>{emirateName(o.pincode)}</Td>
+              <Td>{formatAED(o.total_paise)}{o.amount_paid_paise < o.total_paise && o.amount_paid_paise > 0 && <span className="block text-xs text-navy-600">paid {formatAED(o.amount_paid_paise)}</span>}</Td>
               <Td><Badge tone={statusTone(o.status)}>{STATUS_LABEL[o.status]}</Badge>{o.is_delayed && <Badge tone="red" className="ml-1">Delayed</Badge>}</Td>
             </tr>
           ))}

@@ -1,3 +1,4 @@
+import { emirateName } from '@/lib/emirates'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -8,11 +9,11 @@ import { InputField, SelectField, TextareaField } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
 import { useAuth } from '@/features/account/AuthProvider'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { formatDateTime, formatDeliveryWindow } from '@/lib/format'
 import { STATUS_LABEL, statusTone } from '@/lib/orderStatus'
 import type { OrderStatus } from '@/lib/types'
-import { AdminTitle, rupeesInput } from './ui'
+import { AdminTitle, aedInput } from './ui'
 
 function useAdminOrder(id: string) {
   return useQuery({
@@ -79,16 +80,16 @@ export function AdminOrderDetail() {
               <div key={i.id} className="flex items-center gap-3 p-3 text-sm">
                 <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-navy-50">{i.image_url && <img src={i.image_url} alt="" className="size-full object-cover" />}</div>
                 <div className="min-w-0 flex-1"><p className="font-semibold">{i.product_name}</p><p className="text-navy-600">{i.variant_name} · SKU {i.sku} · Qty {i.quantity}</p></div>
-                <p className="font-semibold">{formatINR(i.line_total_paise)}</p>
+                <p className="font-semibold">{formatAED(i.line_total_paise)}</p>
               </div>
             ))}
             <dl className="grid grid-cols-2 gap-1 p-3 text-sm">
-              <dt>Subtotal</dt><dd className="text-right">{formatINR(o.subtotal_paise)}</dd>
-              {o.discount_paise > 0 && <><dt>Discount {o.coupon_code}</dt><dd className="text-right">− {formatINR(o.discount_paise)}</dd></>}
-              <dt>Delivery{o.free_delivery_applied ? ' (first order free)' : ''}</dt><dd className="text-right">{formatINR(o.delivery_fee_paise)}</dd>
-              <dt className="font-bold">Total</dt><dd className="text-right font-bold">{formatINR(o.total_paise)}</dd>
-              <dt>Paid</dt><dd className="text-right">{formatINR(o.amount_paid_paise)}</dd>
-              {o.amount_refunded_paise > 0 && <><dt>Refunded</dt><dd className="text-right text-danger">{formatINR(o.amount_refunded_paise)}</dd></>}
+              <dt>Subtotal</dt><dd className="text-right">{formatAED(o.subtotal_paise)}</dd>
+              {o.discount_paise > 0 && <><dt>Discount {o.coupon_code}</dt><dd className="text-right">− {formatAED(o.discount_paise)}</dd></>}
+              <dt>Delivery{o.free_delivery_applied ? ' (first order free)' : ''}</dt><dd className="text-right">{formatAED(o.delivery_fee_paise)}</dd>
+              <dt className="font-bold">Total</dt><dd className="text-right font-bold">{formatAED(o.total_paise)}</dd>
+              <dt>Paid</dt><dd className="text-right">{formatAED(o.amount_paid_paise)}</dd>
+              {o.amount_refunded_paise > 0 && <><dt>Refunded</dt><dd className="text-right text-danger">{formatAED(o.amount_refunded_paise)}</dd></>}
             </dl>
           </section>
 
@@ -137,7 +138,7 @@ export function AdminOrderDetail() {
             <h2 className="mb-2 font-semibold">Delivery</h2>
             <p className="font-semibold">{addr.recipient_name} · <a href={`tel:${addr.phone}`} className="text-gold-700">{addr.phone}</a></p>
             <p>{addr.house}, {addr.street}{addr.landmark ? `, near ${addr.landmark}` : ''}</p>
-            <p>{addr.city}, {addr.state} {addr.pincode}</p>
+            <p>{addr.city}, {emirateName(addr.pincode) || addr.state}</p>
             {o.latitude != null && <a className="inline-flex items-center gap-1 text-gold-700 hover:underline" target="_blank" rel="noreferrer" href={`https://www.openstreetmap.org/?mlat=${o.latitude}&mlon=${o.longitude}#map=18/${o.latitude}/${o.longitude}`}><MapPin className="size-4" /> Open map pin</a>}
             <p className="pt-2 text-navy-700">Estimated {formatDeliveryWindow(o.estimated_min_date, o.estimated_max_date) ?? '—'}</p>
             {o.customer_note && <p className="rounded-lg bg-gold-200/30 p-2">Customer note: {o.customer_note}</p>}
@@ -213,9 +214,9 @@ function PaymentRow({ p, canRefund, onDone }: { p: PaymentRowData; canRefund: bo
   const [busy, setBusy] = useState(false)
   const remaining = p.amount_paise - p.amount_refunded_paise
   const refund = async () => {
-    const paise = amount ? rupeesInput(amount) : remaining
+    const paise = amount ? aedInput(amount) : remaining
     if (!paise || paise > remaining) return setErr('Enter an amount up to the remaining balance.')
-    if (!window.confirm(`Refund ${formatINR(paise)} to the customer's card?`)) return
+    if (!window.confirm(`Refund ${formatAED(paise)} to the customer's card?`)) return
     setBusy(true); setErr(null)
     const { data, error } = await requireSupabase().functions.invoke('admin-refund', { body: { payment_id: p.id, amount_paise: paise, reason } })
     setBusy(false)
@@ -229,14 +230,14 @@ function PaymentRow({ p, canRefund, onDone }: { p: PaymentRowData; canRefund: bo
   return (
     <div className="border-b border-navy-100 py-2 text-sm last:border-0">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span>{p.purpose.replace('_', ' ')} · {formatINR(p.amount_paise)} · <Badge tone={p.status === 'succeeded' ? 'green' : p.status.includes('refund') ? 'grey' : 'amber'}>{p.status}</Badge>{!p.livemode && <Badge tone="grey" className="ml-1">test</Badge>}</span>
+        <span>{p.purpose.replace('_', ' ')} · {formatAED(p.amount_paise)} · <Badge tone={p.status === 'succeeded' ? 'green' : p.status.includes('refund') ? 'grey' : 'amber'}>{p.status}</Badge>{!p.livemode && <Badge tone="grey" className="ml-1">test</Badge>}</span>
         <span className="text-navy-600">{p.paid_at ? formatDateTime(p.paid_at) : formatDateTime(p.created_at)}</span>
       </div>
-      {p.refunds.map((r) => <p key={r.id} className="text-xs text-navy-700">Refund {formatINR(r.amount_paise)} · {r.status}{r.reason ? ` · ${r.reason}` : ''}</p>)}
+      {p.refunds.map((r) => <p key={r.id} className="text-xs text-navy-700">Refund {formatAED(r.amount_paise)} · {r.status}{r.reason ? ` · ${r.reason}` : ''}</p>)}
       {canRefund && remaining > 0 && ['succeeded', 'partially_refunded'].includes(p.status) && (
         open ? (
           <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
-            <InputField label={`Amount ₹ (max ${(remaining / 100).toFixed(2)})`} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Full" />
+            <InputField label={`Amount AED (max ${(remaining / 100).toFixed(2)})`} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Full" />
             <InputField label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} />
             <Button size="sm" variant="danger" loading={busy} onClick={refund}>Refund</Button>
             {err && <div className="sm:col-span-3"><Alert tone="error">{err}</Alert></div>}

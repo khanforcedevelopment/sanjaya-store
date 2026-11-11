@@ -7,10 +7,10 @@ import { useStore } from './useStore'
 export function AboutPage() {
   const s = useStore()
   return (
-    <InfoPage title="About us" description={`${s.name}: electronics, fashion and lifestyle, delivered across India from Mumbai.`}>
-      <p><strong>{s.name}</strong> brings electronics, fashion, footwear, watches, bags and lifestyle products to customers across India. Every order is checked by our team, packed in {s.dispatch_address} and delivered by our own delivery team or trusted partners.</p>
-      <p>We keep things simple: clear prices in rupees, free delivery on your first order, secure card payments, and monthly installments on selected categories with no interest.</p>
-      <p>The store is operated by {s.legal_name}, {s.registered_address}.{s.gstin ? ` GSTIN ${s.gstin}.` : ''}</p>
+    <InfoPage title="About us" description={`${s.name}: kitchen, electronics and accessories, delivered across the UAE.`}>
+      <p><strong>{s.name}</strong> brings kitchen, electronics and everyday accessories to customers in all seven emirates of the UAE. Every order is checked by our team, packed in {s.dispatch_address} and delivered by our own delivery team or trusted partners.</p>
+      <p>We keep things simple: clear prices in UAE dirhams (AED) with 5% VAT included, free delivery on your first order, secure card payments, and monthly installments on selected categories with no interest.</p>
+      <p>The store is operated by {s.legal_name}, {s.registered_address}.{s.trn ? ` VAT TRN ${s.trn}.` : ''}</p>
       <p><Link to="/contact">Contact us</Link> any time.</p>
     </InfoPage>
   )

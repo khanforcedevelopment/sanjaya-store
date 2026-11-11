@@ -1,11 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { InputField, SelectField } from '@/components/ui/Field'
-import { pincodeQuery, usePincodeCheck } from '@/features/catalog/api'
-import { supabase } from '@/lib/supabase'
-import { INDIAN_STATES } from '@/lib/indianStates'
+import { usePincodeCheck } from '@/features/catalog/api'
+import { EMIRATES, emirateFromName, emirateName, isEmirateCode } from '@/lib/emirates'
 import { formatDeliveryWindow } from '@/lib/format'
 import { LocationPicker, type PickedLocation } from '@/features/delivery/LocationPicker'
 import { addressSchema, type AddressDraft, type AddressValues } from './addresses'
@@ -19,9 +17,8 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = 'Save a
   const [v, setV] = useState<AddressDraft>(initial)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const set = <K extends keyof AddressDraft>(k: K, val: AddressDraft[K]) => { setV((p) => ({ ...p, [k]: val })); setErrors((e) => ({ ...e, [k]: '' })) }
-  const pin = /^[1-9][0-9]{5}$/.test(v.pincode) ? v.pincode : null
+  const pin = isEmirateCode(v.pincode) ? v.pincode : null
   const { data: check } = usePincodeCheck(pin)
-  const qc = useQueryClient()
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
@@ -33,25 +30,20 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = 'Save a
     onSubmit(r.data)
   }
 
-  const onPincode = async (raw: string) => {
-    const p = raw.replace(/\D/g, '').slice(0, 6)
-    set('pincode', p)
-    if (!supabase || !/^[1-9][0-9]{5}$/.test(p)) return
-    // Fill city/state from our pincode table when the customer has not typed them yet.
-    const c = await qc.fetchQuery(pincodeQuery(p)).catch(() => null)
-    if (!c?.known) return
-    const state = INDIAN_STATES.find((s) => s.toLowerCase() === (c.state ?? '').toLowerCase())
-    setV((prev) => ({ ...prev, city: prev.city || c.city || '', state: prev.state || state || '' }))
+  // The emirate fills both the delivery code (stored as "pincode") and the state line of the address.
+  const onEmirate = (code: string) => {
+    setV((p) => ({ ...p, pincode: code, state: isEmirateCode(code) ? emirateName(code) : '' }))
+    setErrors((e) => ({ ...e, pincode: '', state: '' }))
   }
   const onLocation = (loc: PickedLocation | null) => {
     if (!loc) { setV((p) => ({ ...p, latitude: null, longitude: null, location_source: 'manual' })); return }
     const a = loc.address
-    const state = a?.state ? INDIAN_STATES.find((s) => s.toLowerCase() === a.state!.toLowerCase()) : undefined
+    const code = a?.pincode ?? emirateFromName(a?.state)
     setV((p) => ({
       ...p, latitude: loc.latitude, longitude: loc.longitude, location_source: 'gps',
       // fill only the fields the customer has not typed
-      street: p.street || a?.street || '', city: p.city || a?.city || '', state: p.state || state || '',
-      pincode: p.pincode || a?.pincode || '',
+      street: p.street || a?.street || '', city: p.city || a?.city || '',
+      ...(!p.pincode && code ? { pincode: code, state: emirateName(code) } : {}),
     }))
   }
 
@@ -66,17 +58,16 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = 'Save a
       <LocationPicker value={{ latitude: v.latitude, longitude: v.longitude }} onChange={onLocation} />
       <div className="grid gap-4 sm:grid-cols-2">
         <InputField label="Full name" autoComplete="name" value={v.recipient_name} onChange={(e) => set('recipient_name', e.target.value)} error={errors.recipient_name} />
-        <InputField label="Mobile number" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="98765 43210" value={v.phone} onChange={(e) => set('phone', e.target.value)} error={errors.phone} hint="The rider will call this number." />
-        <InputField label="Pincode" inputMode="numeric" autoComplete="postal-code" value={v.pincode} onChange={(e) => onPincode(e.target.value)} error={errors.pincode}
-          hint={pin && check ? <PincodeHint check={check} /> : undefined} />
-        <InputField label="House / flat / building" autoComplete="address-line1" value={v.house} onChange={(e) => set('house', e.target.value)} error={errors.house} />
-        <InputField className="sm:col-span-2" label="Street, area, locality" autoComplete="address-line2" value={v.street} onChange={(e) => set('street', e.target.value)} error={errors.street} />
-        <InputField className="sm:col-span-2" label="Landmark (optional)" value={v.landmark ?? ''} onChange={(e) => set('landmark', e.target.value)} error={errors.landmark} />
-        <InputField label="City" autoComplete="address-level2" value={v.city} onChange={(e) => set('city', e.target.value)} error={errors.city} />
-        <SelectField label="State" autoComplete="address-level1" value={v.state} onChange={(e) => set('state', e.target.value)} error={errors.state}>
+        <InputField label="Mobile number" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="50 123 4567" value={v.phone} onChange={(e) => set('phone', e.target.value)} error={errors.phone} hint="UAE mobile (+971). The rider will call this number." />
+        <SelectField label="Emirate" autoComplete="address-level1" value={v.pincode} onChange={(e) => onEmirate(e.target.value)} error={errors.pincode || errors.state}
+          hint={pin && check ? <PincodeHint check={check} /> : undefined}>
           <option value="">Choose…</option>
-          {INDIAN_STATES.map((s) => <option key={s}>{s}</option>)}
+          {EMIRATES.map((e) => <option key={e.code} value={e.code}>{e.name}</option>)}
         </SelectField>
+        <InputField label="Flat / villa / building" autoComplete="address-line1" value={v.house} onChange={(e) => set('house', e.target.value)} error={errors.house} />
+        <InputField className="sm:col-span-2" label="Street and community" autoComplete="address-line2" value={v.street} onChange={(e) => set('street', e.target.value)} error={errors.street} />
+        <InputField className="sm:col-span-2" label="Landmark (optional)" value={v.landmark ?? ''} onChange={(e) => set('landmark', e.target.value)} error={errors.landmark} />
+        <InputField label="Area / city" autoComplete="address-level2" placeholder="e.g. Al Nahda, Jumeirah, Al Ain" value={v.city} onChange={(e) => set('city', e.target.value)} error={errors.city} />
       </div>
       {showDefault && (
         <label className="flex items-center gap-2 text-sm">
@@ -92,10 +83,10 @@ export function AddressForm({ initial, onSubmit, onCancel, submitLabel = 'Save a
 }
 
 function PincodeHint({ check }: { check: NonNullable<ReturnType<typeof usePincodeCheck>['data']> }) {
-  if (!check.serviceable) return <span className="flex items-center gap-1 text-danger"><AlertTriangle className="size-3.5" /> We do not deliver to this pincode yet.</span>
+  if (!check.serviceable) return <span className="flex items-center gap-1 text-danger"><AlertTriangle className="size-3.5" /> We do not deliver to this emirate yet.</span>
   return (
     <span className="flex items-center gap-1 text-success">
-      <CheckCircle2 className="size-3.5" /> We deliver here{check.estimated_min_date ? `, arriving ${formatDeliveryWindow(check.estimated_min_date, check.estimated_max_date)}` : ''}{check.is_remote ? ' (remote area)' : ''}
+      <CheckCircle2 className="size-3.5" /> We deliver here{check.estimated_min_date ? `, arriving ${formatDeliveryWindow(check.estimated_min_date, check.estimated_max_date)}` : ''}
     </span>
   )
 }

@@ -1,10 +1,11 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { requireSupabase, supabase } from '@/lib/supabase'
+import { isEmirateCode } from '@/lib/emirates'
 import type { CartLine, Quote } from '@/lib/types'
 
 /** Live server-side price quote for the cart. The server is the only source of prices. */
 export function useQuote(lines: CartLine[], pincode?: string | null, coupon?: string | null, userId?: string | null) {
-  const validPin = pincode && /^[1-9][0-9]{5}$/.test(pincode) ? pincode : null
+  const validPin = isEmirateCode(pincode) ? pincode : null
   return useQuery({
     queryKey: ['quote', lines, validPin, coupon || null, userId ?? null],
     enabled: !!supabase && lines.length > 0,

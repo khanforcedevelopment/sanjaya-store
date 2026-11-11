@@ -1,3 +1,4 @@
+import { emirateName } from '@/lib/emirates'
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Camera, MapPin, Phone } from 'lucide-react'
@@ -5,7 +6,7 @@ import { Alert, Badge, EmptyState } from '@/components/ui/misc'
 import { Button } from '@/components/ui/Button'
 import { InputField, SelectField } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { STATUS_LABEL, statusTone } from '@/lib/orderStatus'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
 import type { Database } from '@/types/database'
@@ -73,7 +74,7 @@ function StopCard({ s }: { s: Stop }) {
 
   const mapUrl = s.latitude != null && s.longitude != null
     ? `https://www.google.com/maps/search/?api=1&query=${s.latitude},${s.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([a.house, a.street, a.city, a.pincode].filter(Boolean).join(', '))}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([a.house, a.street, a.city, emirateName(a.pincode) || a.state, 'UAE'].filter(Boolean).join(', '))}`
   const canStart = s.status === 'dispatched' || s.status === 'in_transit' || s.status === 'delivery_failed'
   const onRoad = s.status === 'out_for_delivery'
 
@@ -83,11 +84,11 @@ function StopCard({ s }: { s: Stop }) {
         <p className="font-semibold text-navy-900">#{s.order_number}</p>
         <Badge tone={statusTone(s.status)}>{STATUS_LABEL[s.status]}</Badge>
         {s.is_delayed && <Badge tone="red">Delayed</Badge>}
-        {s.scheduled_date && <span className="ml-auto text-xs text-navy-600">Planned {new Date(s.scheduled_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>}
+        {s.scheduled_date && <span className="ml-auto text-xs text-navy-600">Planned {new Date(s.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
       </div>
       <p className="mt-2 font-medium">{a.recipient_name}</p>
-      <p className="text-sm text-navy-700">{[a.house, a.street].filter(Boolean).join(', ')}{a.landmark ? `, near ${a.landmark}` : ''}<br />{a.city}, {a.state} {a.pincode}</p>
-      <p className="mt-1 text-sm">{s.items} item{s.items === 1 ? '' : 's'} · {due > 0 ? <strong className="text-danger">Collect {formatINR(due)}</strong> : <span className="text-success">Prepaid</span>}</p>
+      <p className="text-sm text-navy-700">{[a.house, a.street].filter(Boolean).join(', ')}{a.landmark ? `, near ${a.landmark}` : ''}<br />{a.city}, {emirateName(a.pincode) || a.state}</p>
+      <p className="mt-1 text-sm">{s.items} item{s.items === 1 ? '' : 's'} · {due > 0 ? <strong className="text-danger">Collect {formatAED(due)}</strong> : <span className="text-success">Prepaid</span>}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {a.phone && <a className="inline-flex h-9 items-center gap-1.5 rounded-full border border-navy-900/15 px-4 text-sm font-semibold" href={`tel:${a.phone}`}><Phone className="size-4" /> Call</a>}
         <a className="inline-flex h-9 items-center gap-1.5 rounded-full border border-navy-900/15 px-4 text-sm font-semibold" href={mapUrl} target="_blank" rel="noreferrer"><MapPin className="size-4" /> Map</a>

@@ -1,4 +1,4 @@
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 
 /**
  * Plain-language installment terms shown before the customer agrees.
@@ -10,7 +10,7 @@ export function AgreementText({ schedule, graceDays = 3, version }: { schedule?:
     <div className="space-y-2 text-sm text-navy-800">
       <p>Between you and <strong>Sanjaya Trading FZE</strong> (the seller){version && <span className="text-navy-600/80"> · terms version {version}</span>}.</p>
       <ol className="list-decimal space-y-1.5 pl-5">
-        <li>You pay the order total in <strong>{count} payments</strong>{schedule?.length ? <> of about <strong>{formatINR(schedule[schedule.length - 1] ?? 0)}</strong></> : null}. The first is paid now by card; the rest are due on the same date each following month.</li>
+        <li>You pay the order total in <strong>{count} payments</strong>{schedule?.length ? <> of about <strong>{formatAED(schedule[schedule.length - 1] ?? 0)}</strong></> : null}. The first is paid now by card; the rest are due on the same date each following month.</li>
         <li><strong>No interest and no processing fee</strong> is added. The total you pay equals the order total.</li>
         <li>We send a reminder before each due date. Pay from <em>My account → Installments</em> by card.</li>
         <li>If a payment is more than {graceDays} days late, our collections team will contact you, and you cannot start another installment plan until it is paid.</li>

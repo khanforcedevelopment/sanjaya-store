@@ -27,6 +27,18 @@ Last updated: 2026-11-03 · Building all phases continuously (owner approved on 
 
 ---
 
+## UAE launch switch (2026-11-11)
+
+The store now sells in the UAE only, in AED.
+
+- Money: every `*_paise` column now holds **fils** (1 AED = 100 fils). Column names were kept on purpose. The app formats prices as `AED 1,299` / `AED 21.50` (`src/lib/money.ts`), Stripe Checkout charges in `aed`, and the webhook refuses any other currency.
+- Delivery: the UAE has no postal codes, so the `pincode` fields hold a 3-letter emirate code (DXB, AUH, SHJ, AJM, UAQ, RAK, FUJ). Two zones: Dubai/Sharjah/Ajman (1–2 days) and Abu Dhabi/UAQ/RAK/Fujairah (2–3 days). Delivery AED 15 after the free first order. Admin → Delivery lists the seven emirates.
+- Phone numbers: UAE mobiles, +971 5X XXX XXXX (`src/lib/phone.ts`). Dates use Asia/Dubai, also in the database (`ist_today()` keeps its name).
+- VAT: prices are shown as inclusive of 5% VAT. There is no separate tax line; the VAT TRN can be added in Settings → Store details (`trn`).
+- CSV import: columns `price_aed` / `mrp_aed`; old `price_rupees` / `mrp_rupees` files still work and are read as AED.
+- Installments AED 1,000–10,000; WELCOME10 needs AED 100 and gives up to AED 50; referral gift AED 25.
+- Migration: `20261111000100_uae_aed.sql`. Legal pages (terms, privacy) were reworded for UAE law but are still drafts for a lawyer to check.
+
 ## Phase 20 report: testing and launch
 
 ### Features completed

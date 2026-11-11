@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
 import type { Json } from '@/types/database'
-import { AdminTitle, rupeesInput } from './ui'
+import { AdminTitle, aedInput } from './ui'
 
 const SECTIONS: { key: string; title: string; note?: string }[] = [
   { key: 'delivery', title: 'Delivery', note: 'default_fee is charged per order after the first free order.' },
@@ -40,8 +40,8 @@ function SettingCard({ k, title, note, value }: { k: string; title: string; note
     for (const [f, raw] of Object.entries(text)) {
       const orig = value[f]
       if (f.endsWith('_paise')) {
-        const p = raw.trim() === '' && orig === null ? null : rupeesInput(raw)
-        if (p === null && raw.trim() !== '') { setErr(`${label(f)}: enter an amount in rupees`); return }
+        const p = raw.trim() === '' && orig === null ? null : aedInput(raw)
+        if (p === null && raw.trim() !== '') { setErr(`${label(f)}: enter an amount in AED`); return }
         next[f] = p
       } else if (typeof orig === 'number') {
         const n = Number(raw)
@@ -87,7 +87,7 @@ function SettingCard({ k, title, note, value }: { k: string; title: string; note
           const shown = text[f] ?? (v === null ? '' : f.endsWith('_paise') && typeof v === 'number' ? String(v / 100) : String(v))
           return (
             <label key={f} className="block text-sm">
-              <span className="mb-1 block font-medium capitalize text-navy-800">{label(f)}{f.endsWith('_paise') && ' (₹)'}</span>
+              <span className="mb-1 block font-medium capitalize text-navy-800">{label(f)}{f.endsWith('_paise') && ' (AED)'}</span>
               <input className="input" value={shown} onChange={(e) => setText({ ...text, [f]: e.target.value })} inputMode={typeof v === 'number' ? 'decimal' : undefined} />
             </label>
           )

@@ -5,7 +5,7 @@ import { Badge, EmptyState, PageTitle, Skeleton } from '@/components/ui/misc'
 import { ButtonLink } from '@/components/ui/Button'
 import { useAuth } from '@/features/account/AuthProvider'
 import { requireSupabase, supabase } from '@/lib/supabase'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { STATUS_LABEL, statusTone } from '@/lib/orderStatus'
 import { useDocumentMeta } from '@/lib/meta'
 
@@ -44,7 +44,7 @@ export function OrdersPage() {
                       {o.is_delayed && <Badge tone="red">Delayed</Badge>}{o.payment_mode === 'installment' && <Badge tone="gold">6 months</Badge>}
                     </p>
                     <p className="line-clamp-1 text-sm text-navy-700">{first?.product_name}{more > 0 ? ` and ${more} more` : ''}</p>
-                    <p className="text-xs text-navy-600/80">{new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · {formatINR(o.total_paise)}</p>
+                    <p className="text-xs text-navy-600/80">{new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · {formatAED(o.total_paise)}</p>
                   </div>
                   <ChevronRight className="size-5 shrink-0 text-navy-400" />
                 </Link>

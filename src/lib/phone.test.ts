@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { normaliseIndianMobile } from './phone'
+import { displayUaeMobile, localUaeMobile, normaliseUaeMobile } from './phone'
 
-describe('normaliseIndianMobile', () => {
+describe('normaliseUaeMobile', () => {
   it.each([
-    ['98765 43210', '+919876543210'], ['+91 98765-43210', '+919876543210'], ['09876543210', '+919876543210'], ['919876543210', '+919876543210'],
-  ])('accepts %s', (input, want) => expect(normaliseIndianMobile(input)).toBe(want))
-  it.each(['12345', '5876543210', '+1 415 555 0100'])('rejects %s', (input) => expect(normaliseIndianMobile(input)).toBeNull())
+    ['050 123 4567', '+971501234567'], ['50 123 4567', '+971501234567'], ['+971 50 123 4567', '+971501234567'],
+    ['00971 55 987 6543', '+971559876543'], ['971-56-911-0077', '+971569110077'],
+  ])('accepts %s', (input, want) => expect(normaliseUaeMobile(input)).toBe(want))
+  it.each(['12345', '04 123 4567', '+91 98765 43210', '051 123 4567'])('rejects %s', (input) => expect(normaliseUaeMobile(input)).toBeNull())
+  it('formats for display and editing', () => {
+    expect(displayUaeMobile('+971501234567')).toBe('+971 50 123 4567')
+    expect(localUaeMobile('+971501234567')).toBe('50 123 4567')
+  })
 })

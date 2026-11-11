@@ -1,9 +1,10 @@
+import { business } from '@/config/business'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingBag, Trash2 } from 'lucide-react'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Alert, EmptyState } from '@/components/ui/misc'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { useAuth } from '@/features/account/AuthProvider'
 import { useCart } from './CartProvider'
 import { toLines } from './cartStore'
@@ -38,7 +39,7 @@ export function CartDrawer() {
                   <p className="text-xs text-navy-600/70">{i.variant_name}</p>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <QuantityStepper value={i.quantity} onChange={(v) => setQty(i.variant_id, v)} />
-                    <span className="text-sm font-bold">{formatINR(priceOf(i.variant_id, i.unit_price_paise) * i.quantity)}</span>
+                    <span className="text-sm font-bold">{formatAED(priceOf(i.variant_id, i.unit_price_paise) * i.quantity)}</span>
                   </div>
                 </div>
                 <button onClick={() => remove(i.variant_id)} className="self-start text-navy-600/50 hover:text-danger" aria-label={`Remove ${i.product_name}`}><Trash2 className="size-4" /></button>
@@ -47,9 +48,9 @@ export function CartDrawer() {
           </ul>
           <div className="space-y-3 border-t border-navy-100 bg-ivory p-5">
             {q?.errors.map((e) => <Alert key={e} tone="warning">{e}</Alert>)}
-            <div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-bold">{q ? formatINR(q.subtotal_paise) : '…'}</span></div>
+            <div className="flex justify-between text-sm"><span>Subtotal</span><span className="font-bold">{q ? formatAED(q.subtotal_paise) : '…'}</span></div>
             <p className="text-xs text-navy-600/70">
-              {q?.delivery.first_order_free ? 'Delivery is free on your first order.' : 'Delivery ₹50.'} Coupons and delivery are applied at checkout.
+              {q?.delivery.first_order_free ? 'Delivery is free on your first order.' : `Delivery ${business.deliveryFeeLabel}.`} Coupons and delivery are applied at checkout.
             </p>
             <Button className="w-full" size="lg" onClick={() => { close(); navigate('/checkout') }} disabled={!!q?.errors.length}>Checkout</Button>
             <ButtonLink to="/cart" variant="outline" className="w-full" onClick={close}>View bag</ButtonLink>

@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/Toast'
 import { useAuth } from '@/features/account/AuthProvider'
 import { usePublicSetting } from '@/features/catalog/api'
 import { requireSupabase, friendlyError, supabase } from '@/lib/supabase'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { useDocumentMeta } from '@/lib/meta'
 
 type Summary = {
@@ -60,7 +60,7 @@ export function RewardsPage() {
     setBusy(false)
     if (error) return setErr(friendlyError(error))
     const r = data as { code: string; value_paise: number }
-    toast(`Coupon ${r.code} worth ${formatINR(r.value_paise)} created`)
+    toast(`Coupon ${r.code} worth ${formatAED(r.value_paise)} created`)
     setPts(''); qc.invalidateQueries({ queryKey: ['rewards'] })
   }
 
@@ -94,9 +94,9 @@ export function RewardsPage() {
               {s.rewards.map((r) => (
                 <li key={r.milestone + (r.coupon_code ?? '')} className="flex flex-wrap items-center gap-2 rounded-xl border border-navy-100 p-3">
                   <Gift className="size-4 text-gold-700" />
-                  {r.coupon_code ? <><code className="font-semibold">{r.coupon_code}</code><span>{r.coupon_value_paise ? formatINR(r.coupon_value_paise) + ' off' : ''}</span></> : <span>Free gift (our team will contact you)</span>}
+                  {r.coupon_code ? <><code className="font-semibold">{r.coupon_code}</code><span>{r.coupon_value_paise ? formatAED(r.coupon_value_paise) + ' off' : ''}</span></> : <span>Free gift (our team will contact you)</span>}
                   <Badge tone={r.coupon_used ? 'grey' : 'green'} className="ml-auto">{r.coupon_used ? 'used' : r.status}</Badge>
-                  {r.expires_at && !r.coupon_used && <span className="w-full text-xs text-navy-600">Use by {new Date(r.expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                  {r.expires_at && !r.coupon_used && <span className="w-full text-xs text-navy-600">Use by {new Date(r.expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
                 </li>
               ))}
             </ul>
@@ -109,8 +109,8 @@ export function RewardsPage() {
           )}
         </section>
         <section className="card p-5">
-          <h2 className="mb-1 flex items-center gap-2 font-semibold text-navy-900"><Star className="size-5 text-gold-600" /> {s.points.toLocaleString('en-IN')} points</h2>
-          {loyalty && <p className="text-sm text-navy-700">You earn {loyalty.points_per_100_inr} point per ₹100 on delivered orders. 1 point = {formatINR(loyalty.paise_per_point)}. Redeem from {loyalty.min_redeem_points} points for a coupon.</p>}
+          <h2 className="mb-1 flex items-center gap-2 font-semibold text-navy-900"><Star className="size-5 text-gold-600" /> {s.points.toLocaleString('en-GB')} points</h2>
+          {loyalty && <p className="text-sm text-navy-700">You earn {loyalty.points_per_100_inr} point per AED 100 on delivered orders. 1 point = {formatAED(loyalty.paise_per_point)}. Redeem from {loyalty.min_redeem_points} points for a coupon.</p>}
           <div className="mt-4 flex flex-wrap items-end gap-2">
             <InputField label="Points to redeem" inputMode="numeric" value={pts} onChange={(e) => setPts(e.target.value.replace(/\D/g, ''))} className="min-w-40 flex-1" />
             <Button loading={busy} onClick={redeem} disabled={!pts}>Get coupon</Button>

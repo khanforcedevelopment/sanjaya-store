@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { requireSupabase, supabase } from '@/lib/supabase'
+import { isEmirateCode } from '@/lib/emirates'
 import type { PincodeCheck, Tables } from '@/lib/types'
 
 export interface ListingItem {
@@ -121,7 +122,7 @@ export const pincodeQuery = (pincode: string) => ({ queryKey: ['pincode', pincod
 export function usePincodeCheck(pincode: string | null) {
   return useQuery({
     ...pincodeQuery(pincode ?? ''),
-    enabled: !!supabase && !!pincode && /^[1-9][0-9]{5}$/.test(pincode),
+    enabled: !!supabase && isEmirateCode(pincode),
   })
 }
 

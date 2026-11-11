@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 
 export function Badge({ children, tone = 'gold', className }: { children: ReactNode; tone?: 'gold' | 'navy' | 'green' | 'red' | 'grey' | 'amber'; className?: string }) {
   const tones = {
@@ -20,10 +20,10 @@ export function Price({ paise, mrpPaise, size = 'md' }: { paise: number; mrpPais
   const sizes = { sm: 'text-base', md: 'text-lg', lg: 'text-3xl' }
   return (
     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-      <span className={cn('font-bold tracking-tight text-navy-900', sizes[size])}>{formatINR(paise)}</span>
+      <span className={cn('font-bold tracking-tight text-navy-900', sizes[size])}>{formatAED(paise)}</span>
       {off > 0 && (
         <>
-          <span className="text-sm text-navy-600/60 line-through">{formatINR(mrpPaise!)}</span>
+          <span className="text-sm text-navy-600/60 line-through">{formatAED(mrpPaise!)}</span>
           <span className="text-sm font-semibold text-success">{off}% off</span>
         </>
       )}

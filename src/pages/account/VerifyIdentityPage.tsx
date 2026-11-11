@@ -9,10 +9,9 @@ import { requireSupabase, friendlyError, supabase } from '@/lib/supabase'
 import { useDocumentMeta } from '@/lib/meta'
 
 const DOCS = [
-  { v: 'pan', l: 'PAN card', hint: 'ABCDE1234F' },
+  { v: 'emirates_id', l: 'Emirates ID', hint: '784-1990-1234567-1' },
   { v: 'passport', l: 'Passport', hint: 'A1234567' },
-  { v: 'driving_licence', l: 'Driving licence', hint: 'MH0220190012345' },
-  { v: 'voter_id', l: 'Voter ID', hint: 'ABC1234567' },
+  { v: 'driving_licence', l: 'UAE driving licence', hint: '1234567' },
 ]
 const MAX = 8 * 1024 * 1024
 
@@ -40,7 +39,7 @@ export function VerifyIdentityPage() {
       return data
     },
   })
-  const [type, setType] = useState('pan')
+  const [type, setType] = useState('emirates_id')
   const [number, setNumber] = useState('')
   const [name, setName] = useState('')
   const [front, setFront] = useState<File | null>(null)
@@ -109,10 +108,10 @@ export function VerifyIdentityPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <FilePick label="Document front" hint="Clear photo, all corners visible" file={front} onFile={setFront} capture="environment" />
-              <FilePick label="Document back" hint="Optional (driving licence, voter ID)" file={back} onFile={setBack} capture="environment" />
+              <FilePick label="Document back" hint="Optional: back side of Emirates ID or licence" file={back} onFile={setBack} capture="environment" />
               <FilePick label="Selfie" hint="Your face, holding the document" file={selfie} onFile={setSelfie} capture="user" />
             </div>
-            <p className="text-xs text-navy-600">We do not accept Aadhaar here. Your document number is never stored, only a secure fingerprint to stop duplicate accounts and its last 4 characters. Photos are visible only to the Super Admin.</p>
+            <p className="text-xs text-navy-600">Your document number is never stored, only a secure fingerprint to stop duplicate accounts and its last 4 characters. Photos are visible only to the Super Admin.</p>
             <label className="flex items-start gap-2 text-sm font-medium text-navy-900">
               <input type="checkbox" className="mt-0.5 size-4 accent-gold-500" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
               I agree that Sanjaya Trading FZE may check these documents to verify my identity for installment plans.

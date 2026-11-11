@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { requireSupabase, supabase } from '@/lib/supabase'
-import { normaliseIndianMobile } from '@/lib/phone'
+import { localUaeMobile, normaliseUaeMobile } from '@/lib/phone'
+import { emirateName, isEmirateCode } from '@/lib/emirates'
 import type { Tables } from '@/lib/types'
 
 export type Address = Tables<'addresses'>
@@ -10,16 +11,17 @@ export const addressSchema = z.object({
   label: z.string().trim().min(1, 'Give this address a name').max(40),
   recipient_name: z.string().trim().min(2, 'Enter the full name').max(120),
   phone: z.string().transform((v, ctx) => {
-    const n = normaliseIndianMobile(v)
-    if (!n) { ctx.addIssue({ code: 'custom', message: 'Enter a valid 10-digit mobile number' }); return z.NEVER }
+    const n = normaliseUaeMobile(v)
+    if (!n) { ctx.addIssue({ code: 'custom', message: 'Enter a valid UAE mobile number, e.g. 50 123 4567' }); return z.NEVER }
     return n
   }),
-  house: z.string().trim().min(1, 'Enter house or flat number').max(120),
-  street: z.string().trim().min(2, 'Enter street or area').max(200),
+  house: z.string().trim().min(1, 'Enter building, villa or flat number').max(120),
+  street: z.string().trim().min(2, 'Enter street or community').max(200),
   landmark: z.string().trim().max(200).optional().transform((v) => v || null),
-  city: z.string().trim().min(2, 'Enter the city').max(80),
-  state: z.string().trim().min(2, 'Choose the state').max(80),
-  pincode: z.string().trim().regex(/^[1-9][0-9]{5}$/, 'Enter a valid 6-digit pincode'),
+  city: z.string().trim().min(2, 'Enter the area or city').max(80),
+  state: z.string().trim().min(2, 'Choose the emirate').max(80),
+  /** Emirate code (DXB, AUH, ...); the database column is still called pincode. */
+  pincode: z.string().trim().refine(isEmirateCode, 'Choose your emirate'),
   is_default: z.boolean().default(false),
   latitude: z.number().min(-90).max(90).nullable().default(null),
   longitude: z.number().min(-180).max(180).nullable().default(null),
@@ -34,7 +36,7 @@ export const emptyAddress: AddressDraft = {
 
 export function toDraft(a: Address): AddressDraft {
   return {
-    label: a.label, recipient_name: a.recipient_name, phone: a.phone.replace(/^\+91/, ''), house: a.house, street: a.street,
+    label: a.label, recipient_name: a.recipient_name, phone: localUaeMobile(a.phone), house: a.house, street: a.street,
     landmark: a.landmark ?? '', city: a.city, state: a.state, pincode: a.pincode, is_default: a.is_default,
     latitude: a.latitude, longitude: a.longitude, location_source: a.location_source as 'manual' | 'gps',
   }
@@ -99,5 +101,5 @@ export function useSetDefaultAddress() {
 }
 
 export function formatAddressLines(a: Pick<Address, 'house' | 'street' | 'landmark' | 'city' | 'state' | 'pincode'>): string[] {
-  return [`${a.house}, ${a.street}`, a.landmark ? `Near ${a.landmark}` : '', `${a.city}, ${a.state} ${a.pincode}`].filter(Boolean)
+  return [`${a.house}, ${a.street}`, a.landmark ? `Near ${a.landmark}` : '', `${a.city}, ${emirateName(a.pincode) || a.state}`].filter(Boolean)
 }

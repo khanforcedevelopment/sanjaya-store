@@ -4,9 +4,9 @@ import { Alert, Badge } from '@/components/ui/misc'
 import { Button } from '@/components/ui/Button'
 import { InputField, SelectField } from '@/components/ui/Field'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { formatDay } from '@/lib/format'
-import { AdminTitle, Table, Td, rupeesInput } from './ui'
+import { AdminTitle, Table, Td, aedInput } from './ui'
 
 export function AdminMarketing() {
   return (
@@ -92,11 +92,11 @@ function Coupons() {
     e.preventDefault()
     const code = f.code.trim().toUpperCase()
     if (!/^[A-Z0-9_-]{3,32}$/.test(code)) return setErr('Code: 3–32 letters, numbers, - or _.')
-    const value = f.type === 'percent' ? parseInt(f.value, 10) : rupeesInput(f.value)
+    const value = f.type === 'percent' ? parseInt(f.value, 10) : aedInput(f.value)
     if (!value || (f.type === 'percent' && value > 100)) return setErr('Enter a valid discount.')
     run(db.from('coupons').insert({
       code, description: f.description || null, discount_type: f.type, discount_value: value,
-      max_discount_paise: f.max ? rupeesInput(f.max) : null, min_subtotal_paise: f.min ? rupeesInput(f.min) ?? 0 : 0,
+      max_discount_paise: f.max ? aedInput(f.max) : null, min_subtotal_paise: f.min ? aedInput(f.min) ?? 0 : 0,
       ends_at: f.ends ? new Date(`${f.ends}T23:59:59+05:30`).toISOString() : null, usage_limit: f.limit ? parseInt(f.limit, 10) : null,
       per_user_limit: parseInt(f.per_user || '1', 10), first_order_only: f.first,
     }))
@@ -110,8 +110,8 @@ function Coupons() {
         {data?.map((c) => (
           <tr key={c.id}>
             <Td><span className="font-mono font-semibold">{c.code}</span><span className="block text-xs text-navy-600">{c.description}</span></Td>
-            <Td>{c.discount_type === 'percent' ? `${c.discount_value}%` : formatINR(c.discount_value)}{c.max_discount_paise ? ` (max ${formatINR(c.max_discount_paise)})` : ''}</Td>
-            <Td className="text-xs">{c.min_subtotal_paise ? `Min ${formatINR(c.min_subtotal_paise)} · ` : ''}{c.per_user_limit} per customer{c.usage_limit ? ` · ${c.usage_limit} total` : ''}{c.first_order_only ? ' · first order' : ''}</Td>
+            <Td>{c.discount_type === 'percent' ? `${c.discount_value}%` : formatAED(c.discount_value)}{c.max_discount_paise ? ` (max ${formatAED(c.max_discount_paise)})` : ''}</Td>
+            <Td className="text-xs">{c.min_subtotal_paise ? `Min ${formatAED(c.min_subtotal_paise)} · ` : ''}{c.per_user_limit} per customer{c.usage_limit ? ` · ${c.usage_limit} total` : ''}{c.first_order_only ? ' · first order' : ''}</Td>
             <Td>{c.ends_at ? formatDay(c.ends_at) : '—'}</Td>
             <Td><input type="checkbox" className="size-4 accent-gold-500" checked={c.is_active} onChange={(e) => run(db.from('coupons').update({ is_active: e.target.checked }).eq('id', c.id))} aria-label="Coupon active" /></Td>
           </tr>
@@ -119,10 +119,10 @@ function Coupons() {
       </Table>
       <form className="card mt-3 grid gap-3 p-4 sm:grid-cols-5" onSubmit={add}>
         <InputField label="Code" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} required />
-        <SelectField label="Type" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}><option value="percent">Percent off</option><option value="fixed">Rupees off</option></SelectField>
-        <InputField label={f.type === 'percent' ? 'Percent' : 'Amount ₹'} inputMode="decimal" value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} required />
-        <InputField label="Max discount ₹" inputMode="decimal" value={f.max} onChange={(e) => setF({ ...f, max: e.target.value })} />
-        <InputField label="Min order ₹" inputMode="decimal" value={f.min} onChange={(e) => setF({ ...f, min: e.target.value })} />
+        <SelectField label="Type" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}><option value="percent">Percent off</option><option value="fixed">AED off</option></SelectField>
+        <InputField label={f.type === 'percent' ? 'Percent' : 'Amount AED'} inputMode="decimal" value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} required />
+        <InputField label="Max discount AED" inputMode="decimal" value={f.max} onChange={(e) => setF({ ...f, max: e.target.value })} />
+        <InputField label="Min order AED" inputMode="decimal" value={f.min} onChange={(e) => setF({ ...f, min: e.target.value })} />
         <InputField className="sm:col-span-2" label="Description" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
         <InputField label="Last day" type="date" value={f.ends} onChange={(e) => setF({ ...f, ends: e.target.value })} />
         <InputField label="Total uses" inputMode="numeric" value={f.limit} onChange={(e) => setF({ ...f, limit: e.target.value.replace(/\D/g, '') })} />

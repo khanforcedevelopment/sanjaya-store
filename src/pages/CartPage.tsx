@@ -2,7 +2,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingBag, Trash2 } from 'lucide-react'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { Alert, EmptyState, PageTitle, Price } from '@/components/ui/misc'
-import { InputField } from '@/components/ui/Field'
+import { SelectField } from '@/components/ui/Field'
+import { EMIRATES } from '@/lib/emirates'
 import { useAuth } from '@/features/account/AuthProvider'
 import { useCart } from '@/features/cart/CartProvider'
 import { toLines } from '@/features/cart/cartStore'
@@ -11,14 +12,12 @@ import { QuantityStepper } from '@/features/cart/QuantityStepper'
 import { OrderSummary } from '@/features/cart/OrderSummary'
 import { usePincode } from '@/features/delivery/usePincode'
 import { useDocumentMeta } from '@/lib/meta'
-import { useState } from 'react'
 
 export function CartPage() {
   useDocumentMeta({ title: 'Your bag', noindex: true })
   const { items, setQty, remove, coupon, setCoupon } = useCart()
   const { user } = useAuth()
   const { pincode, setPincode } = usePincode()
-  const [pinDraft, setPinDraft] = useState(pincode ?? '')
   const quote = useQuote(toLines(items), pincode, coupon, user?.id)
   const q = quote.data
   const navigate = useNavigate()
@@ -60,12 +59,13 @@ export function CartPage() {
               )
             })}
           </ul>
-          <form className="card flex items-end gap-3 p-4" onSubmit={(e) => { e.preventDefault(); if (/^[1-9][0-9]{5}$/.test(pinDraft)) setPincode(pinDraft) }}>
-            <InputField className="flex-1" label="Delivery pincode" inputMode="numeric" maxLength={6} value={pinDraft}
-              onChange={(e) => setPinDraft(e.target.value.replace(/\D/g, ''))}
-              error={q?.delivery.pincode && !q.delivery.serviceable ? 'We do not deliver to this pincode yet.' : null} />
-            <Button type="submit" variant="outline">Check</Button>
-          </form>
+          <div className="card p-4">
+            <SelectField label="Deliver to emirate" value={pincode ?? ''} onChange={(e) => e.target.value && setPincode(e.target.value)}
+              error={q?.delivery.pincode && !q.delivery.serviceable ? 'We do not deliver to this emirate yet.' : null}>
+              <option value="">Choose…</option>
+              {EMIRATES.map((e) => <option key={e.code} value={e.code}>{e.name}</option>)}
+            </SelectField>
+          </div>
         </div>
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <OrderSummary quote={q} coupon={coupon} onCoupon={setCoupon} loading={quote.isFetching}>

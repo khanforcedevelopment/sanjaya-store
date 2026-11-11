@@ -4,10 +4,9 @@ import { Db, DbError } from '../_shared/clients.ts'
 import { corsHeaders, json, requireEnv } from '../_shared/http.ts'
 
 const FORMATS: Record<string, { re: RegExp; label: string }> = {
-  pan: { re: /^[A-Z]{5}[0-9]{4}[A-Z]$/, label: 'PAN must look like ABCDE1234F' },
-  passport: { re: /^[A-Z][0-9]{7}$/, label: 'Passport number must look like A1234567' },
-  driving_licence: { re: /^[A-Z]{2}[0-9]{2}[0-9A-Z]{9,13}$/, label: 'Enter the driving licence number without spaces, e.g. MH0220190012345' },
-  voter_id: { re: /^[A-Z]{3}[0-9]{7}$/, label: 'Voter ID must look like ABC1234567' },
+  emirates_id: { re: /^784[0-9]{12}$/, label: 'Emirates ID must be 15 digits starting with 784, e.g. 784-1990-1234567-1' },
+  passport: { re: /^[A-Z0-9]{6,9}$/, label: 'Enter the passport number as printed (6 to 9 letters and digits)' },
+  driving_licence: { re: /^[0-9]{5,10}$/, label: 'Enter the UAE driving licence number (digits only)' },
 }
 
 async function hmac(secret: string, text: string) {

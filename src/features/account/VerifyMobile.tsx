@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { InputField } from '@/components/ui/Field'
 import { useAuth } from '@/features/account/AuthProvider'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
-import { normaliseIndianMobile } from '@/lib/phone'
+import { normaliseUaeMobile } from '@/lib/phone'
 
 /** Confirms a mobile number on the sign-in account with an SMS code (needed for installments). */
 export function VerifyMobile() {
@@ -24,8 +24,8 @@ export function VerifyMobile() {
     return <p className="flex items-center gap-2 text-sm font-semibold text-success"><CheckCircle2 className="size-4" /> Mobile {sent ?? (user?.phone ? '+' + user.phone.replace(/^\+/, '') : '')} verified</p>
   }
   const send = async () => {
-    const n = normaliseIndianMobile(num)
-    if (!n) return setErr('Enter a valid 10-digit Indian mobile number.')
+    const n = normaliseUaeMobile(num)
+    if (!n) return setErr('Enter a valid UAE mobile number, e.g. 50 123 4567.')
     setBusy(true); setErr(null)
     const { error } = await requireSupabase().auth.updateUser({ phone: n })
     setBusy(false)
@@ -45,7 +45,7 @@ export function VerifyMobile() {
       <p className="flex items-center gap-2 text-sm text-navy-800"><Smartphone className="size-4 text-gold-700" /> Verify your mobile number with a one-time SMS code. Needed for installments.</p>
       {!sent ? (
         <div className="flex flex-wrap items-end gap-2">
-          <InputField label="Mobile number" type="tel" inputMode="tel" placeholder="98765 43210" value={num} onChange={(e) => setNum(e.target.value)} className="min-w-52 flex-1" />
+          <InputField label="Mobile number" type="tel" inputMode="tel" placeholder="50 123 4567" value={num} onChange={(e) => setNum(e.target.value)} className="min-w-52 flex-1" />
           <Button variant="navy" loading={busy} onClick={send}>Send code</Button>
         </div>
       ) : (

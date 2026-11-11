@@ -3,10 +3,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Alert, Badge } from '@/components/ui/misc'
 import { Button } from '@/components/ui/Button'
 import { InputField, SelectField } from '@/components/ui/Field'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
 import type { Tables } from '@/types/database'
-import { AdminTitle, Table, Td, rupeesInput } from './ui'
+import { AdminTitle, Table, Td, aedInput } from './ui'
 
 type Campaign = Tables<'referral_campaigns'>
 const blank = { name: '', headline: '', required_referrals: '5', reward_type: 'coupon', reward_value: '', reward_description: '', ends_at: '' }
@@ -22,7 +22,7 @@ function CampaignForm({ c, onDone }: { c?: Campaign; onDone: () => void }) {
   const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value })
   const save = async () => {
     const n = Number(f.required_referrals)
-    const value = f.reward_type === 'points' ? Number(f.reward_value) : rupeesInput(f.reward_value)
+    const value = f.reward_type === 'points' ? Number(f.reward_value) : aedInput(f.reward_value)
     if (!f.name.trim() || !f.headline.trim() || !f.reward_description.trim()) return setErr('Fill in name, headline and reward description.')
     if (!Number.isInteger(n) || n < 1 || n > 100) return setErr('Friends needed must be 1 to 100.')
     if (value === null || !Number.isFinite(value) || value < 0) return setErr('Enter the reward value.')
@@ -38,10 +38,10 @@ function CampaignForm({ c, onDone }: { c?: Campaign; onDone: () => void }) {
       <InputField label="Headline customers see" value={f.headline} onChange={set('headline')} className="sm:col-span-2" placeholder="Invite 5 friends, get a free gift" />
       <InputField label="Friends needed" inputMode="numeric" value={f.required_referrals} onChange={set('required_referrals')} />
       <SelectField label="Reward" value={f.reward_type} onChange={set('reward_type')}>
-        <option value="coupon">Coupon (₹ off)</option><option value="gift">Gift voucher (₹) + gift</option><option value="points">Loyalty points</option>
+        <option value="coupon">Coupon (AED off)</option><option value="gift">Gift voucher (AED) + gift</option><option value="points">Loyalty points</option>
       </SelectField>
-      <InputField label={f.reward_type === 'points' ? 'Points' : 'Value ₹'} inputMode="decimal" value={f.reward_value} onChange={set('reward_value')} />
-      <InputField label="Reward description" value={f.reward_description} onChange={set('reward_description')} className="sm:col-span-2" placeholder="Gift voucher worth ₹500" />
+      <InputField label={f.reward_type === 'points' ? 'Points' : 'Value AED'} inputMode="decimal" value={f.reward_value} onChange={set('reward_value')} />
+      <InputField label="Reward description" value={f.reward_description} onChange={set('reward_description')} className="sm:col-span-2" placeholder="Gift voucher worth AED 25" />
       <InputField label="Ends on (optional)" type="date" value={f.ends_at} onChange={set('ends_at')} />
       {err && <div className="sm:col-span-3"><Alert tone="error">{err}</Alert></div>}
       <div className="flex gap-2 sm:col-span-3"><Button size="sm" onClick={save}>{c ? 'Save campaign' : 'Add campaign'}</Button>{c && <Button size="sm" variant="ghost" onClick={onDone}>Cancel</Button>}</div>
@@ -75,7 +75,7 @@ export function AdminReferrals() {
           <div key={c.id} className="card flex flex-wrap items-center gap-3 p-4 text-sm">
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-navy-900">{c.headline} {!c.is_active && <Badge tone="grey">off</Badge>}</p>
-              <p className="text-navy-700">{c.required_referrals} friends → {c.reward_description} ({c.reward_type === 'points' ? `${c.reward_value} points` : formatINR(c.reward_value)}){c.ends_at ? ` · ends ${new Date(c.ends_at).toLocaleDateString('en-IN')}` : ''}</p>
+              <p className="text-navy-700">{c.required_referrals} friends → {c.reward_description} ({c.reward_type === 'points' ? `${c.reward_value} points` : formatAED(c.reward_value)}){c.ends_at ? ` · ends ${new Date(c.ends_at).toLocaleDateString('en-GB')}` : ''}</p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setEditing(c.id)}>Edit</Button>
             <Button size="sm" variant={c.is_active ? 'ghost' : 'navy'} onClick={() => run(db.from('referral_campaigns').update({ is_active: !c.is_active }).eq('id', c.id))}>{c.is_active ? 'Turn off' : 'Turn on'}</Button>
@@ -93,7 +93,7 @@ export function AdminReferrals() {
             <tr key={g.id}>
               <Td>{u?.full_name ?? 'Customer'}<span className="block text-xs text-navy-600">{u?.phone}</span></Td>
               <Td>{g.milestone}</Td>
-              <Td>{g.reward_type}{cp && <span className="block text-xs">{cp.code} · {formatINR(cp.discount_value)}</span>}</Td>
+              <Td>{g.reward_type}{cp && <span className="block text-xs">{cp.code} · {formatAED(cp.discount_value)}</span>}</Td>
               <Td><Badge tone={g.status === 'fulfilled' ? 'green' : g.status === 'cancelled' ? 'grey' : 'amber'}>{g.status}</Badge></Td>
               <Td>{g.reward_type === 'gift' && g.status === 'issued' && <Button size="sm" variant="outline" onClick={() => run(db.from('reward_grants').update({ status: 'fulfilled' }).eq('id', g.id))}>Gift sent</Button>}</Td>
             </tr>

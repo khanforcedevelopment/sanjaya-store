@@ -1,3 +1,4 @@
+import { business } from '@/config/business'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronLeft, ChevronRight, Gift, Truck, CalendarClock, Zap } from 'lucide-react'
@@ -11,7 +12,7 @@ import { cn } from '@/lib/cn'
 import { useDocumentMeta } from '@/lib/meta'
 
 export function HomePage() {
-  useDocumentMeta({ title: 'Sanjaya Store | Electronics, fashion & lifestyle across India', description: 'Shop phones, laptops, sarees, kurtis, watches, bags and more. Free delivery on your first order, dispatched from Mumbai.' })
+  useDocumentMeta({ title: 'Sanjaya Store | Online shopping across the UAE', description: 'Shop kitchen, electronics and accessories online. Prices in AED, free delivery on your first order, anywhere in the UAE.' })
   return (
     <>
       <Hero />
@@ -20,15 +21,12 @@ export function HomePage() {
           <CategoryTiles />
           <DeliveryStrip />
           <FlashSale />
-          <ProductRail eyebrow="Electronics" title="The flagship collection" params={{ category: 'mobiles', featured: false, sort: 'discount' }} href="/c/mobiles" />
-          <ProductRail eyebrow="Work & create" title="Laptops and tablets" params={{ category: 'laptops-tablets', sort: 'rating' }} href="/c/laptops-tablets" />
+          <ProductRail eyebrow="Kitchen & dining" title="Cook, serve and store" params={{ category: 'kitchen-dining', sort: 'discount' }} href="/c/kitchen-dining" />
+          <ProductRail eyebrow="Electronics" title="Gadgets and appliances" params={{ category: 'electronics', sort: 'discount' }} href="/c/electronics" />
           <PromoPair />
-          <ProductRail eyebrow="Ethnic fashion" title="Heirloom sarees & kurtis" params={{ category: 'ethnic-wear', sort: 'discount' }} href="/c/ethnic-wear" />
           <ReferralBlock />
-          <ProductRail eyebrow="Timepieces" title="Watches" params={{ category: 'watches' }} href="/c/watches" />
-          <ProductRail eyebrow="Carry it well" title="Handbags & accessories" params={{ category: 'bags' }} href="/c/bags" />
+          <ProductRail eyebrow="Accessories" title="Everyday essentials" params={{ category: 'accessories', sort: 'newest' }} href="/c/accessories" />
           <InstallmentsBlock />
-          <ProductRail eyebrow="Step out" title="Footwear" params={{ category: 'footwear', sort: 'newest' }} href="/c/footwear" />
         </>
       )}
     </>
@@ -36,8 +34,8 @@ export function HomePage() {
 }
 
 const FALLBACK_HERO: Banner = {
-  id: 'fallback', placement: 'hero', eyebrow: 'Sanjaya Store', title: 'Luxury, delivered across India',
-  subtitle: 'Electronics, fashion, footwear, watches, bags and lifestyle, dispatched from Mumbai.',
+  id: 'fallback', placement: 'hero', eyebrow: 'Sanjaya Store', title: 'Luxury, delivered across the UAE',
+  subtitle: 'Kitchen, electronics and everyday accessories, delivered to all seven emirates.',
   cta_label: null, cta_href: null, image_url: '/brand/hero/festive.webp', theme: 'navy', sort_order: 0, is_active: true,
   starts_at: null, ends_at: null, created_at: '',
 }
@@ -186,10 +184,10 @@ function DeliveryStrip() {
             <span className="grid size-12 shrink-0 place-items-center rounded-full bg-navy-950 text-gold-300"><Truck className="size-6" /></span>
             <div>
               <p className="font-display text-2xl font-semibold leading-tight">{b?.title ?? 'Free delivery on your first order'}</p>
-              <p className="text-sm text-navy-900/80">{b?.subtitle ?? 'Then just ₹50 per order. Delivered by our own team from Mumbai.'}</p>
+              <p className="text-sm text-navy-900/80">{b?.subtitle ?? `Then just ${business.deliveryFeeLabel} per order, anywhere in the UAE.`}</p>
             </div>
           </div>
-          <ButtonLink to={b?.cta_href ?? '/delivery'} variant="navy">{b?.cta_label ?? 'Check your pincode'}</ButtonLink>
+          <ButtonLink to={b?.cta_href ?? '/delivery'} variant="navy">{b?.cta_label ?? 'Check your emirate'}</ButtonLink>
         </div>
       </div>
     </section>
@@ -277,7 +275,7 @@ function InstallmentsBlock() {
         <span className="grid size-16 place-items-center rounded-2xl bg-navy-900 text-gold-300"><CalendarClock className="size-8" /></span>
         <div>
           <h2 className="font-display text-3xl font-semibold text-navy-900">Pay in 6 easy installments</h2>
-          <p className="mt-1 text-navy-700">On laptops, electronics, watches and bags. Pay the first installment today and the rest monthly. Subject to verification.</p>
+          <p className="mt-1 text-navy-700">On selected electronics. Pay the first installment today and the rest monthly. Subject to verification.</p>
         </div>
         <ButtonLink to="/installments" variant="outline">How it works</ButtonLink>
       </div>

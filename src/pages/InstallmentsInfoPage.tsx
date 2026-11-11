@@ -6,7 +6,7 @@ import { useAuth } from '@/features/account/AuthProvider'
 import { useCategories } from '@/features/catalog/api'
 import { reasonLink, useInstallmentSettings, useMyEligibility } from '@/features/installments/api'
 import { AgreementText } from '@/features/installments/Agreement'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { useDocumentMeta } from '@/lib/meta'
 
 export function InstallmentsInfoPage() {
@@ -30,7 +30,7 @@ export function InstallmentsInfoPage() {
               <h2 className="mb-3 flex items-center gap-2 font-semibold text-navy-900"><CalendarClock className="size-5 text-gold-600" /> How it works</h2>
               <ol className="list-decimal space-y-2 pl-5 text-sm text-navy-800">
                 <li>Verify your mobile number and identity once (takes a few minutes).</li>
-                <li>Add eligible products worth {formatINR(s.min_order_total_paise)} to {formatINR(s.max_order_total_paise)} to your bag.</li>
+                <li>Add eligible products worth {formatAED(s.min_order_total_paise)} to {formatAED(s.max_order_total_paise)} to your bag.</li>
                 <li>At checkout choose <strong>Pay in {s.count} monthly installments</strong>, read and accept the terms, and pay the first installment by card.</li>
                 <li>We approve and dispatch your order. Pay the remaining installments from <em>My account → Installments</em>; we remind you before each due date.</li>
               </ol>

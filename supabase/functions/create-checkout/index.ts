@@ -1,4 +1,4 @@
-// Creates a Stripe Checkout Session (INR) for an order or an installment of the signed-in customer.
+// Creates a Stripe Checkout Session (AED) for an order or an installment of the signed-in customer.
 import { assertPaymentsAllowed, Db, DbError, stripe } from '../_shared/clients.ts'
 import { corsHeaders, json, siteUrl } from '../_shared/http.ts'
 
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
 
     const session = await stripe<Session>('checkout/sessions', {
       mode: 'payment',
-      line_items: { 0: { quantity: 1, price_data: { currency: 'inr', unit_amount: t.amount_paise, product_data: { name: t.description } } } },
+      line_items: { 0: { quantity: 1, price_data: { currency: 'aed', unit_amount: t.amount_paise, product_data: { name: t.description } } } },
       customer_email: user.email,
       client_reference_id: t.order_id,
       metadata: { order_id: t.order_id, installment_id: t.installment_id ?? '', purpose: t.purpose, user_id: user.id },

@@ -39,7 +39,7 @@ export function SupportThread({ ticketId, userId, asStaff = false }: { ticketId:
           return (
             <li key={m.id} className={cn('max-w-[85%] rounded-2xl px-4 py-2.5 text-sm', mine ? 'ml-auto bg-navy-900 text-white' : 'bg-navy-50 text-navy-900')}>
               <p className="whitespace-pre-wrap">{m.body}</p>
-              <p className={cn('mt-1 text-[11px]', mine ? 'text-white/60' : 'text-navy-600/80')}>{m.is_staff ? 'Sanjaya support' : 'Customer'} · {new Date(m.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+              <p className={cn('mt-1 text-[11px]', mine ? 'text-white/60' : 'text-navy-600/80')}>{m.is_staff ? 'Sanjaya support' : 'Customer'} · {new Date(m.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</p>
             </li>
           )
         })}
