@@ -5,6 +5,7 @@ import { Alert } from '@/components/ui/misc'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/features/account/AuthProvider'
 import { csvToObjects } from '@/lib/csv'
+import { env } from '@/lib/env'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
 import { AdminTitle, Table, Td } from './ui'
 
@@ -15,7 +16,7 @@ const SAMPLE = [
   ['cotton-kurta-navy', '', '', 'men', '', '', '', '', 'CK-NAVY-L', 'L', 'L', 'Navy', '', '89', '119', '8', ''],
 ]
 
-interface Copy { copied: number; failed: { product_slug: string; url: string; error: string }[] }
+interface Copy { done?: number; of?: number; copied: number; failed: { product_slug: string; url: string; error: string }[] }
 interface Result { dry_run?: boolean; errors: { row: number; error: string }[]; new_products: number; new_variants: number; updated_variants: number }
 
 function toRow(r: Record<string, string>) {
@@ -37,6 +38,7 @@ export function AdminImport() {
   const [demo, setDemo] = useState<string | null>(null)
   const [copy, setCopy] = useState<Copy | null>(null)
   const [copying, setCopying] = useState(false)
+  const [remaining, setRemaining] = useState<string | null>(null)
 
   const load = async (f: File | undefined) => {
     setResult(null); setErr(null); setCopy(null)
@@ -56,19 +58,43 @@ export function AdminImport() {
     if (!dry) { qc.invalidateQueries(); await copyImages() }
   }
   // Supplier image links are downloaded and saved in our own storage, so the shop never hotlinks them.
-  const copyImages = async () => {
-    const slugs = [...new Set((rows as Record<string, unknown>[]).filter((r) => r.image_urls).map((r) => String(r.product_slug)))]
+  // Three batches of 10 products run at a time; each batch is one call to the rehost-images function.
+  const copySlugs = async (slugs: string[]) => {
     if (!slugs.length) return
     setCopying(true)
     const total: Copy = { copied: 0, failed: [] }
-    for (let i = 0; i < slugs.length; i += 10) {
-      const { data, error } = await requireSupabase().functions.invoke<Copy & { error?: string }>('rehost-images', { body: { product_slugs: slugs.slice(i, i + 10) } })
-      if (error || !data || data.error) {
-        total.failed.push(...slugs.slice(i, i + 10).map((s) => ({ product_slug: s, url: '', error: data?.error ?? 'could not reach the image copier' })))
-      } else { total.copied += data.copied; total.failed.push(...data.failed) }
-      setCopy({ ...total })
+    const batches: string[][] = []
+    for (let i = 0; i < slugs.length; i += 10) batches.push(slugs.slice(i, i + 10))
+    let done = 0
+    const lane = async () => {
+      for (let b = batches.shift(); b; b = batches.shift()) {
+        const { data, error } = await requireSupabase().functions.invoke<Copy & { error?: string }>('rehost-images', { body: { product_slugs: b } })
+        if (error || !data || data.error) {
+          total.failed.push(...b.map((s) => ({ product_slug: s, url: '', error: data?.error ?? 'could not reach the image copier' })))
+        } else { total.copied += data.copied; total.failed.push(...data.failed) }
+        done += b.length
+        setCopy({ ...total, done, of: slugs.length })
+      }
     }
+    await Promise.all([lane(), lane(), lane()])
     setCopying(false); qc.invalidateQueries()
+  }
+  const copyImages = () => copySlugs([...new Set((rows as Record<string, unknown>[]).filter((r) => r.image_urls).map((r) => String(r.product_slug)))])
+  // Finds every product that still shows a photo from another website and copies those photos.
+  const copyRemaining = async () => {
+    setRemaining(null)
+    const db = requireSupabase()
+    const own = `${env.supabaseUrl ?? ''}/storage/%`
+    const slugs = new Set<string>()
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await db.from('product_images').select('products(slug)').like('url', 'http%').not('url', 'like', own).range(from, from + 999)
+      if (error) return setRemaining(friendlyError(error))
+      for (const r of (data ?? []) as unknown as { products: { slug: string } | null }[]) if (r.products) slugs.add(r.products.slug)
+      if (!data || data.length < 1000) break
+    }
+    if (!slugs.size) return setRemaining('All product photos are already on our storage.')
+    setResult(null)
+    await copySlugs([...slugs])
   }
   const template = () => {
     const esc = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
@@ -107,26 +133,26 @@ export function AdminImport() {
           <Button variant="outline" disabled={!rows.length} loading={busy} onClick={() => run(true)}>Check file</Button>
           <Button disabled={!rows.length || !result?.dry_run || result.errors.length > 0} loading={busy} onClick={() => run(false)}>Import now</Button>
         </div>
+        {(copying || copy) && (
+          <Alert tone={copying ? 'info' : copy?.failed.length ? 'error' : 'success'} title="Product photos">
+            {copying ? `Copying photos from the supplier links to our storage… ${copy?.done ?? 0} of ${copy?.of ?? '…'} products, ${copy?.copied ?? 0} photos so far. Keep this page open.` : `${copy?.copied ?? 0} photos copied to our storage.`}
+            {!copying && copy?.failed.length ? ` ${copy.failed.length} could not be copied (still shown from the supplier link).` : ''}
+          </Alert>
+        )}
+        {!copying && copy && copy.failed.length > 0 && (
+          <>
+            <Table head={['Product', 'Link', 'Problem']}>
+              {copy.failed.slice(0, 200).map((f, i) => <tr key={i}><Td>{f.product_slug}</Td><Td className="max-w-xs truncate">{f.url}</Td><Td>{f.error}</Td></tr>)}
+            </Table>
+            <Button size="sm" variant="outline" onClick={() => copySlugs([...new Set(copy.failed.map((f) => f.product_slug))])}>Try copying photos again</Button>
+          </>
+        )}
         {result && (
           <div className="space-y-3">
             <Alert tone={result.errors.length ? 'error' : 'success'} title={result.dry_run ? 'Check result (nothing saved yet)' : 'Imported'}>
               {result.new_products} new products, {result.new_variants} new variants, {result.updated_variants} updated variants.
               {result.errors.length ? ` ${result.errors.length} rows need fixing; nothing will be imported until they are fixed.` : ''}
             </Alert>
-            {!result.dry_run && (copying || copy) && (
-              <Alert tone={copying ? 'info' : copy?.failed.length ? 'error' : 'success'} title="Product photos">
-                {copying ? 'Copying photos from the supplier links to our storage…' : `${copy?.copied ?? 0} photos copied to our storage.`}
-                {!copying && copy?.failed.length ? ` ${copy.failed.length} could not be copied (still shown from the supplier link).` : ''}
-              </Alert>
-            )}
-            {!copying && copy && copy.failed.length > 0 && (
-              <>
-                <Table head={['Product', 'Link', 'Problem']}>
-                  {copy.failed.slice(0, 200).map((f, i) => <tr key={i}><Td>{f.product_slug}</Td><Td className="max-w-xs truncate">{f.url}</Td><Td>{f.error}</Td></tr>)}
-                </Table>
-                <Button size="sm" variant="outline" onClick={copyImages}>Try copying photos again</Button>
-              </>
-            )}
             {result.errors.length > 0 && (
               <Table head={['Row', 'Problem']}>
                 {result.errors.slice(0, 200).map((e) => <tr key={e.row}><Td>{e.row + 1}</Td><Td>{e.error}</Td></tr>)}
@@ -134,6 +160,12 @@ export function AdminImport() {
             )}
           </div>
         )}
+      </div>
+      <div className="card mt-6 space-y-3 p-5">
+        <h2 className="font-semibold text-navy-900">Supplier photos</h2>
+        <p className="text-sm text-navy-700">Copies every product photo that is still loaded from another website (for example a supplier) to our own storage. Safe to run again; already copied photos are skipped.</p>
+        {remaining && <Alert tone="info">{remaining}</Alert>}
+        <Button size="sm" variant="outline" loading={copying} onClick={copyRemaining}>Copy all remaining photos</Button>
       </div>
       {hasRole('super_admin') && (
         <div className="card mt-6 space-y-3 p-5">
