@@ -11,12 +11,15 @@ export interface ListingItem {
 }
 export interface ListingResult {
   items: ListingItem[]
-  facets: { total: number; brands: { brand: string; count: number }[]; price_min: number | null; price_max: number | null }
+  facets: {
+    total: number; brands: { brand: string; count: number }[]; price_min: number | null; price_max: number | null
+    categories?: { slug: string; name: string; count: number }[]; on_sale?: number
+  }
 }
 export interface ListingParams {
   category?: string | null; q?: string | null; brands?: string[]; min?: number | null; max?: number | null
   inStock?: boolean; tag?: string | null; featured?: boolean; sort?: string; limit?: number; offset?: number
-  ids?: string[]
+  ids?: string[]; onSale?: boolean; minRating?: number | null; subcategories?: string[]
 }
 
 export function useProducts(params: ListingParams, enabled = true) {
@@ -38,6 +41,9 @@ export function useProducts(params: ListingParams, enabled = true) {
         p_limit: params.limit ?? 24,
         p_offset: params.offset ?? 0,
         p_ids: params.ids,
+        p_on_sale: params.onSale ?? false,
+        p_min_rating: params.minRating ?? undefined,
+        p_subcategories: params.subcategories?.length ? params.subcategories : undefined,
       })
       if (error) throw error
       return data as unknown as ListingResult

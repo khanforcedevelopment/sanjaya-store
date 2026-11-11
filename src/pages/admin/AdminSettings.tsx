@@ -9,6 +9,7 @@ import type { Json } from '@/types/database'
 import { AdminTitle, aedInput } from './ui'
 
 const SECTIONS: { key: string; title: string; note?: string }[] = [
+  { key: 'dashboard', title: 'Dashboard', note: 'monthly_target is the sales goal on the Overview page (AED). The warehouse pin is the starting point on the fleet map.' },
   { key: 'delivery', title: 'Delivery', note: 'default_fee is charged per order after the first free order.' },
   { key: 'flash_sale', title: 'Flash sale', note: 'Products tagged with the tag below appear in the flash sale. ends_at is an ISO time, e.g. 2026-11-30T23:59:00+05:30.' },
   { key: 'payments', title: 'Payments' },
