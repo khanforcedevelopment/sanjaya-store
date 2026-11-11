@@ -6,6 +6,7 @@ import { ButtonLink } from '@/components/ui/Button'
 import { SectionHeading, Skeleton } from '@/components/ui/misc'
 import { useBanners, useCategories, usePublicSetting, type Banner } from '@/features/catalog/api'
 import { ProductRail } from '@/features/catalog/ProductRail'
+import { OfferGrid, ShowcaseMedia, categoryFromHref } from '@/features/home/Showcase'
 import { categoryArt } from '@/features/catalog/categoryArt'
 import { isBackendConfigured } from '@/lib/env'
 import { cn } from '@/lib/cn'
@@ -18,14 +19,19 @@ export function HomePage() {
       <Hero />
       {isBackendConfigured && (
         <>
+          <OfferGrid />
           <CategoryTiles />
           <DeliveryStrip />
           <FlashSale />
-          <ProductRail eyebrow="Kitchen & dining" title="Cook, serve and store" params={{ category: 'kitchen-dining', sort: 'discount' }} href="/c/kitchen-dining" />
-          <ProductRail eyebrow="Electronics" title="Gadgets and appliances" params={{ category: 'electronics', sort: 'discount' }} href="/c/electronics" />
+          <ProductRail eyebrow="Kitchen & dining" title="Best deals for your kitchen" params={{ category: 'kitchen-dining', sort: 'discount' }} href="/c/kitchen-dining" />
+          <ProductRail eyebrow="Cameras" title="Capture every moment" params={{ category: 'cameras', sort: 'discount' }} href="/c/cameras" />
           <PromoPair />
+          <ProductRail eyebrow="Audio" title="Earphones & headphones" params={{ category: 'earphones-headphones', sort: 'discount' }} href="/c/earphones-headphones" />
+          <ProductRail eyebrow="Wearables" title="Smartwatches & fitness bands" params={{ category: 'wearables-smartwatches', sort: 'discount' }} href="/c/wearables-smartwatches" />
           <ReferralBlock />
-          <ProductRail eyebrow="Accessories" title="Everyday essentials" params={{ category: 'accessories', sort: 'newest' }} href="/c/accessories" />
+          <ProductRail eyebrow="Cookware" title="Pots, pans and sets" params={{ category: 'cookware', sort: 'discount' }} href="/c/cookware" />
+          <ProductRail eyebrow="Mobile accessories" title="Chargers, cases and cables" params={{ category: 'mobile-accessories', sort: 'newest' }} href="/c/mobile-accessories" />
+          <ProductRail eyebrow="Dining" title="Dinnerware & drinkware" params={{ category: 'dinnerware-tabletop', sort: 'discount' }} href="/c/dinnerware-tabletop" />
           <InstallmentsBlock />
         </>
       )}
@@ -77,17 +83,20 @@ function Hero() {
       aria-roledescription="carousel" aria-label="Featured"
       onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
     >
-      {slides.map((b, k) => (
-        <HeroMedia key={b.id} banner={b} active={k === cur} />
-      ))}
-      <div className={cn('pointer-events-none absolute inset-0 -z-0 transition-opacity duration-700',
+      {slides.map((b, k) => {
+        const cat = !b.image_url ? categoryFromHref(b.cta_href) : null
+        return cat
+          ? <ShowcaseMedia key={b.id} category={cat} active={k === cur} light={b.theme === 'ivory'} />
+          : <HeroMedia key={b.id} banner={b} active={k === cur} />
+      })}
+      <div className={cn('pointer-events-none absolute inset-0 -z-0 transition-opacity duration-700', !s.image_url && categoryFromHref(s.cta_href) && 'opacity-0',
         light
           ? 'bg-[linear-gradient(90deg,rgba(251,249,244,0.97)_0%,rgba(251,249,244,0.85)_38%,rgba(251,249,244,0.1)_70%,transparent_100%)] max-md:bg-[linear-gradient(0deg,rgba(251,249,244,0.98)_35%,rgba(251,249,244,0.6)_65%,rgba(251,249,244,0.1)_100%)]'
           : 'bg-[linear-gradient(90deg,rgba(5,12,31,0.96)_0%,rgba(5,12,31,0.8)_35%,rgba(5,12,31,0.15)_70%,transparent_100%)] max-md:bg-[linear-gradient(0deg,rgba(5,12,31,0.98)_35%,rgba(5,12,31,0.55)_65%,rgba(5,12,31,0.15)_100%)]')} />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px gold-rule" />
 
-      <div className="container-x relative flex min-h-[560px] flex-col justify-end py-14 md:min-h-[640px] md:justify-center md:py-20">
-        <div key={s.id} className="max-w-xl animate-[fadeUp_0.8s_ease-out]">
+      <div className="container-x pointer-events-none relative flex min-h-[600px] flex-col justify-end pb-12 pt-44 md:min-h-[640px] md:justify-center md:py-20">
+        <div key={s.id} className="pointer-events-auto max-w-xl animate-[fadeUp_0.8s_ease-out]">
           {s.eyebrow && (
             <p className="eyebrow flex items-center gap-3">
               <span className="h-px w-10 bg-gradient-to-r from-transparent to-gold-500" />{s.eyebrow}
@@ -104,7 +113,7 @@ function Hero() {
         </div>
 
         {n > 1 && (
-          <div className="mt-10 flex items-center gap-4 md:absolute md:bottom-8 md:left-auto md:mt-0">
+          <div className="pointer-events-auto mt-10 flex items-center gap-4 md:absolute md:bottom-8 md:left-auto md:mt-0">
             <button onClick={() => setI((x) => (x - 1 + n) % n)} className="grid size-10 place-items-center rounded-full border border-current/25 backdrop-blur-sm opacity-80 hover:border-gold-400 hover:opacity-100" aria-label="Previous slide"><ChevronLeft className="size-4" /></button>
             <div className="flex gap-2">
               {slides.map((b, k) => (
@@ -152,19 +161,21 @@ function HeroMedia({ banner, active }: { banner: Banner; active: boolean }) {
 
 function CategoryTiles() {
   const { data } = useCategories()
-  const top = (data ?? []).filter((c) => !c.parent_id)
-  if (!top.length) return null
+  const all = data ?? []
+  const subs = all.filter((c) => c.parent_id)
+  const list = subs.length ? subs : all
+  if (!list.length) return null
   return (
     <section className="container-x py-10">
-      <SectionHeading eyebrow="Shop by category" title="Everything, beautifully curated" />
-      <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11">
-        {top.map((c) => (
+      <SectionHeading eyebrow="Shop by category" title="Find exactly what you need" />
+      <ul className="scrollbar-none -mx-4 grid auto-cols-[5.5rem] grid-flow-col grid-rows-2 gap-x-3 gap-y-5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-5 sm:grid-rows-none sm:overflow-visible sm:px-0 lg:grid-cols-7 xl:grid-cols-10">
+        {list.map((c) => (
           <li key={c.id}>
             <Link to={`/c/${c.slug}`} className="group flex flex-col items-center gap-2 text-center">
-              <span className="block aspect-square w-full max-w-28 overflow-hidden rounded-full border border-gold-400/40 bg-navy-900 p-1 transition group-hover:border-gold-500 group-hover:shadow-[var(--shadow-lift)]">
-                <img src={c.image_url ?? categoryArt(c.slug)} alt="" loading="lazy" className="size-full rounded-full object-cover transition duration-500 group-hover:scale-110" />
+              <span className="block aspect-square w-full max-w-24 overflow-hidden rounded-full bg-white p-2.5 shadow-[var(--shadow-card)] ring-1 ring-gold-400/40 transition group-hover:shadow-[var(--shadow-lift)] group-hover:ring-gold-500">
+                <img src={c.image_url ?? categoryArt(c.slug)} alt="" loading="lazy" className="size-full object-contain transition duration-500 group-hover:scale-110" />
               </span>
-              <span className="text-xs font-semibold text-navy-900 sm:text-[13px]">{c.name}</span>
+              <span className="text-[11px] font-semibold leading-tight text-navy-900 sm:text-xs">{c.name}</span>
             </Link>
           </li>
         ))}
