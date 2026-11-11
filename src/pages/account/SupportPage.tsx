@@ -105,7 +105,7 @@ export function SupportPage() {
               {tickets.map((t) => (
                 <li key={t.id}><Link to={`/account/support/${t.id}`} className="flex items-center gap-3 p-4 hover:bg-navy-50/50">
                   <MessageCircle className="size-5 text-gold-700" />
-                  <span className="min-w-0 flex-1"><span className="block truncate font-semibold text-navy-900">{t.subject}</span><span className="text-xs text-navy-600">{(t.order as { order_number: string } | null)?.order_number ?? 'General'} · {new Date(t.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate font-semibold text-navy-900">{t.subject}</span><span className="text-xs text-navy-600">{(t.order as { order_number: string } | null)?.order_number ?? 'General'} · {new Date(t.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></span>
                   <Badge tone={ticketStatus(t.status).t}>{ticketStatus(t.status).l}</Badge>
                 </Link></li>
               ))}

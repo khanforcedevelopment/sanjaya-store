@@ -2,7 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import { Tag, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/misc'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { formatDeliveryWindow } from '@/lib/format'
 import type { Quote } from '@/lib/types'
 
@@ -33,14 +33,14 @@ export function OrderSummary({ quote, coupon, onCoupon, loading, children }: {
       {coupon && quote?.coupon.error && <Alert tone="warning">{quote.coupon.error}</Alert>}
 
       <dl className="space-y-2 text-sm">
-        <Row label="Subtotal" value={quote ? formatINR(quote.subtotal_paise) : '…'} />
-        {couponOk && quote!.discount_paise > 0 && <Row label={`Coupon ${coupon}`} value={`− ${formatINR(quote!.discount_paise)}`} tone="text-success" />}
-        <Row label="Delivery" value={!quote ? '…' : !d?.pincode ? 'Enter pincode' : !d.serviceable ? 'Not available' : quote.delivery_fee_paise === 0 ? 'FREE' : formatINR(quote.delivery_fee_paise)}
+        <Row label="Subtotal" value={quote ? formatAED(quote.subtotal_paise) : '…'} />
+        {couponOk && quote!.discount_paise > 0 && <Row label={`Coupon ${coupon}`} value={`− ${formatAED(quote!.discount_paise)}`} tone="text-success" />}
+        <Row label="Delivery" value={!quote ? '…' : !d?.pincode ? 'Enter pincode' : !d.serviceable ? 'Not available' : quote.delivery_fee_paise === 0 ? 'FREE' : formatAED(quote.delivery_fee_paise)}
           tone={quote?.delivery_fee_paise === 0 && d?.serviceable ? 'text-success font-semibold' : undefined} />
         {d?.first_order_free && d.serviceable && <p className="text-xs text-success">Free delivery on your first order.</p>}
         {d?.first_order_assumed && <p className="text-xs text-navy-600/70">Sign in to confirm first-order free delivery.</p>}
         <div className="gold-rule my-2" />
-        <Row label="Total" value={quote ? formatINR(quote.total_paise) : '…'} bold />
+        <Row label="Total" value={quote ? formatAED(quote.total_paise) : '…'} bold />
       </dl>
       {d?.serviceable && d.estimated_min_date && (
         <p className="text-sm text-navy-700">Estimated delivery <strong>{formatDeliveryWindow(d.estimated_min_date, d.estimated_max_date)}</strong>{d.is_remote ? ' (remote area)' : ''}</p>

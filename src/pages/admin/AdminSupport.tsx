@@ -50,7 +50,7 @@ export function AdminSupport() {
           {data?.map((x) => (
             <li key={x.id}><button type="button" onClick={() => setSel(x.id)} className={cn('w-full p-3 text-left text-sm hover:bg-navy-50/60', sel === x.id && 'bg-gold-200/30')}>
               <span className="block truncate font-semibold text-navy-900">{x.subject}</span>
-              <span className="block text-xs text-navy-600">{x.customer?.full_name ?? 'Customer'}{x.order ? ` · ${x.order.order_number}` : ''} · {new Date(x.updated_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+              <span className="block text-xs text-navy-600">{x.customer?.full_name ?? 'Customer'}{x.order ? ` · ${x.order.order_number}` : ''} · {new Date(x.updated_at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}</span>
             </button></li>
           ))}
         </ul>

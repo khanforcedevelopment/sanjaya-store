@@ -7,7 +7,7 @@ import { Sheet } from '@/components/ui/Sheet'
 import { ProductCard } from '@/features/catalog/ProductCard'
 import { useWishlistActions } from '@/features/catalog/ProductRail'
 import { useCategories, useProducts, type ListingResult } from '@/features/catalog/api'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { useDocumentMeta } from '@/lib/meta'
 import { cn } from '@/lib/cn'
 
@@ -17,8 +17,8 @@ const SORTS: [string, string][] = [
   ['price_desc', 'Price: high to low'], ['discount', 'Biggest discount'], ['rating', 'Top rated'],
 ]
 const PRICE_BANDS: [string, number | null, number | null][] = [
-  ['Under ₹1,000', null, 100000], ['₹1,000 – ₹5,000', 100000, 500000], ['₹5,000 – ₹20,000', 500000, 2000000],
-  ['₹20,000 – ₹50,000', 2000000, 5000000], ['Over ₹50,000', 5000000, null],
+  ['Under AED 50', null, 5000], ['AED 50 – 200', 5000, 20000], ['AED 200 – 1,000', 20000, 100000],
+  ['AED 1,000 – 3,000', 100000, 300000], ['Over AED 3,000', 300000, null],
 ]
 
 export function ListingPage({ mode }: { mode: 'category' | 'search' | 'deals' }) {
@@ -77,7 +77,7 @@ export function ListingPage({ mode }: { mode: 'category' | 'search' | 'deals' })
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-4xl font-semibold text-navy-900">{title}</h1>
-          <p className="mt-1 text-sm text-navy-600/80">{isLoading ? 'Loading…' : `${total.toLocaleString('en-IN')} products`}</p>
+          <p className="mt-1 text-sm text-navy-600/80">{isLoading ? 'Loading…' : `${total.toLocaleString('en-GB')} products`}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setFiltersOpen(true)}><SlidersHorizontal className="size-4" /> Filters</Button>
@@ -149,7 +149,7 @@ function Filters({ facets, brands, min, max, inStock, onBrand, onPrice, onStock,
             </li>
           ))}
         </ul>
-        {facets?.price_min != null && <p className="mt-2 text-xs text-navy-600/60">From {formatINR(facets.price_min)} to {formatINR(facets.price_max ?? facets.price_min)}</p>}
+        {facets?.price_min != null && <p className="mt-2 text-xs text-navy-600/60">From {formatAED(facets.price_min)} to {formatAED(facets.price_max ?? facets.price_min)}</p>}
       </fieldset>
       {list.length > 0 && (
         <fieldset>

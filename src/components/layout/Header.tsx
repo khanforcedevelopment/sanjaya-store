@@ -1,3 +1,4 @@
+import { business } from '@/config/business'
 import { useState, type FormEvent } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Heart, Menu, Search, ShoppingBag, User, X, ShieldCheck } from 'lucide-react'
@@ -22,7 +23,7 @@ export function SearchBox({ className, autoFocus, onDone }: { className?: string
     <form onSubmit={submit} role="search" className={cn('relative', className)}>
       <input
         value={q} onChange={(e) => setQ(e.target.value)} autoFocus={autoFocus} type="search" enterKeyHint="search"
-        placeholder="Search phones, sarees, watches…" aria-label="Search products"
+        placeholder="Search kitchen, electronics, accessories…" aria-label="Search products"
         className="h-11 w-full rounded-full border border-white/10 bg-white pl-5 pr-12 text-[15px] text-ink placeholder:text-navy-600/50 focus:outline-none focus:ring-2 focus:ring-gold-400"
       />
       <button type="submit" className="absolute right-1 top-1 grid size-9 place-items-center rounded-full bg-gradient-to-b from-gold-300 to-gold-500 text-navy-950" aria-label="Search">
@@ -46,7 +47,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40">
       <div className="bg-gradient-to-r from-gold-600 via-gold-400 to-gold-600 text-center text-[12px] font-semibold tracking-wide text-navy-950">
-        <p className="container-x py-1.5"><span className="sm:hidden">Free first delivery · ₹50 thereafter</span><span className="hidden sm:inline">Free delivery on your first order · ₹50 thereafter · Dispatched from Mumbai</span></p>
+        <p className="container-x py-1.5"><span className="sm:hidden">Free first delivery · {business.deliveryFeeLabel} thereafter</span><span className="hidden sm:inline">Free delivery on your first order · {business.deliveryFeeLabel} thereafter · Delivering across the UAE</span></p>
       </div>
       <div className="bg-navy-900 text-white">
         <div className="container-x flex h-16 items-center gap-3 md:h-20 md:gap-6">

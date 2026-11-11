@@ -9,10 +9,10 @@ import { requireSupabase, friendlyError } from '@/lib/supabase'
 import { AdminTitle, Table, Td } from './ui'
 
 const COLUMNS = ['product_slug', 'product_name', 'brand', 'category_slug', 'short_description', 'description', 'tags', 'is_active',
-  'sku', 'variant_name', 'size', 'colour', 'storage', 'price_rupees', 'mrp_rupees', 'stock', 'image_urls']
+  'sku', 'variant_name', 'size', 'colour', 'storage', 'price_aed', 'mrp_aed', 'stock', 'image_urls']
 const SAMPLE = [
-  ['cotton-kurta-navy', 'Cotton Kurta, Navy', 'Your Brand', 'men', 'Breathable cotton kurta', '', 'kurta|cotton', 'true', 'CK-NAVY-M', 'M', 'M', 'Navy', '', '1299', '1599', '10', 'https://example.com/photo1.jpg|https://example.com/photo2.jpg'],
-  ['cotton-kurta-navy', '', '', 'men', '', '', '', '', 'CK-NAVY-L', 'L', 'L', 'Navy', '', '1299', '1599', '8', ''],
+  ['cotton-kurta-navy', 'Cotton Kurta, Navy', 'Your Brand', 'men', 'Breathable cotton kurta', '', 'kurta|cotton', 'true', 'CK-NAVY-M', 'M', 'M', 'Navy', '', '89', '119', '10', 'https://example.com/photo1.jpg|https://example.com/photo2.jpg'],
+  ['cotton-kurta-navy', '', '', 'men', '', '', '', '', 'CK-NAVY-L', 'L', 'L', 'Navy', '', '89', '119', '8', ''],
 ]
 
 interface Copy { copied: number; failed: { product_slug: string; url: string; error: string }[] }
@@ -92,7 +92,8 @@ export function AdminImport() {
       <div className="card space-y-4 p-5">
         <ul className="list-disc space-y-1 pl-5 text-sm text-navy-700">
           <li>Rows with the same <code>product_slug</code> become one product with several variants. Existing SKUs are updated (price, MRP, stock, name).</li>
-          <li><code>category_slug</code> must match a category (e.g. mobile-phones, men, women, sarees, watches). Separate tags and image links with <code>|</code>.</li>
+          <li><code>price_aed</code> and <code>mrp_aed</code> are in UAE dirhams including 5% VAT, e.g. <code>21.50</code>. Older files with <code>price_rupees</code> / <code>mrp_rupees</code> columns are read as AED too.</li>
+          <li><code>category_slug</code> must match a category (e.g. kitchen-dining, electronics, accessories or one of their sub-categories). Separate tags and image links with <code>|</code>.</li>
           <li><code>image_urls</code>: direct https links to JPG, PNG or WebP photos. After import the photos are downloaded and saved on our own storage.</li>
           <li>Use photos you own or have permission to use. New products go live straight away; set <code>is_active</code> to false to keep one hidden.</li>
         </ul>

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import { Price, Rating, Badge } from '@/components/ui/misc'
 import { cn } from '@/lib/cn'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import type { ListingItem } from './api'
 
 export function ProductCard({ p, wished, onWish, className }: { p: ListingItem; wished?: boolean; onWish?: (on: boolean) => void; className?: string }) {
@@ -32,7 +32,7 @@ export function ProductCard({ p, wished, onWish, className }: { p: ListingItem; 
         <div className="mt-auto pt-1">
           <Price paise={p.min_price} mrpPaise={p.max_mrp} size="sm" />
           {p.variant_count > 1 && <p className="mt-0.5 text-[11px] text-navy-600/60">{p.variant_count} options</p>}
-          {p.installment_eligible && p.min_price >= 500000 && <p className="mt-0.5 text-[11px] font-medium text-navy-700">or 6 × {formatINR(Math.ceil(p.min_price / 600) * 100)}/month</p>}
+          {p.installment_eligible && p.min_price >= 500000 && <p className="mt-0.5 text-[11px] font-medium text-navy-700">or 6 × {formatAED(Math.ceil(p.min_price / 600) * 100)}/month</p>}
         </div>
       </div>
     </article>

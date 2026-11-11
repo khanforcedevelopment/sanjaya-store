@@ -6,7 +6,7 @@ import { Alert, Badge } from '@/components/ui/misc'
 import { Button } from '@/components/ui/Button'
 import { InputField, SelectField } from '@/components/ui/Field'
 import { useAuth } from '@/features/account/AuthProvider'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
 import { AdminTitle } from './ui'
 
@@ -45,7 +45,7 @@ function TaskCard({ t, collectors }: { t: Task; collectors: { id: string; full_n
     <article className="card p-4 text-sm">
       <div className="flex flex-wrap items-center gap-2">
         {o && <Link to={`/admin/orders/${o.id}`} className="font-semibold text-navy-900 hover:text-gold-700">#{o.order_number}</Link>}
-        {i && <span>Installment {i.seq}/{i.plan?.installment_count} · <strong>{formatINR(i.amount_paise)}</strong></span>}
+        {i && <span>Installment {i.seq}/{i.plan?.installment_count} · <strong>{formatAED(i.amount_paise)}</strong></span>}
         <Badge tone={t.status === 'resolved' ? 'green' : t.status === 'escalated' ? 'red' : 'amber'}>{t.status}</Badge>
         {i && <Badge tone={i.status === 'overdue' ? 'red' : i.status === 'paid' ? 'green' : 'grey'}>{i.status}{late > 0 && i.status === 'overdue' ? ` · ${late} days late` : ''}</Badge>}
       </div>
@@ -53,7 +53,7 @@ function TaskCard({ t, collectors }: { t: Task; collectors: { id: string; full_n
       <p className="text-xs text-navy-600">Assigned to: {t.assignee?.full_name ?? 'nobody'}</p>
       {t.notes.length > 0 && (
         <ul className="mt-2 space-y-1 border-l border-navy-100 pl-3 text-xs text-navy-700">
-          {[...t.notes].sort((a, b) => a.id - b.id).map((n) => <li key={n.id}>{new Date(n.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}: {n.note}</li>)}
+          {[...t.notes].sort((a, b) => a.id - b.id).map((n) => <li key={n.id}>{new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}: {n.note}</li>)}
         </ul>
       )}
       {err && <div className="mt-2"><Alert tone="error">{err}</Alert></div>}

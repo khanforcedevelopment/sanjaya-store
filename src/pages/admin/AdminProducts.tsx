@@ -8,8 +8,8 @@ import { InputField, SelectField, TextareaField } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
 import { useCategories } from '@/features/catalog/api'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
-import { formatINR } from '@/lib/money'
-import { AdminTitle, Table, Td, rupeesInput } from './ui'
+import { formatAED } from '@/lib/money'
+import { AdminTitle, Table, Td, aedInput } from './ui'
 
 export function AdminProducts() {
   const [sp, setSp] = useSearchParams()
@@ -33,7 +33,7 @@ export function AdminProducts() {
 
   return (
     <>
-      <AdminTitle title="Products" subtitle={data ? `${data.count.toLocaleString('en-IN')} products` : undefined}>
+      <AdminTitle title="Products" subtitle={data ? `${data.count.toLocaleString('en-GB')} products` : undefined}>
         <input className="input h-9 w-56" placeholder="Search name, brand, slug" defaultValue={q} onKeyDown={(e) => e.key === 'Enter' && set('q', (e.target as HTMLInputElement).value.trim())} aria-label="Search products" />
         <Button size="sm" variant={low ? 'danger' : 'outline'} onClick={() => set('low', low ? '' : '1')}>Low stock</Button>
         <Link to="/admin/products/new" className="inline-flex h-9 items-center gap-1 rounded-full bg-navy-900 px-4 text-sm font-semibold text-white"><Plus className="size-4" /> New product</Link>
@@ -49,7 +49,7 @@ export function AdminProducts() {
                 <tr key={p.id}>
                   <Td><Link to={`/admin/products/${p.id}`} className="font-semibold text-navy-900 hover:text-gold-700">{p.name}</Link><span className="block text-xs text-navy-600">{p.brand}{p.tags.includes('demo') && ' · demo'}</span></Td>
                   <Td>{(p.category as { name: string } | null)?.name}</Td>
-                  <Td>{vs.length ? formatINR(Math.min(...vs.map((v) => v.price_paise))) : '—'}</Td>
+                  <Td>{vs.length ? formatAED(Math.min(...vs.map((v) => v.price_paise))) : '—'}</Td>
                   <Td>{stock}{lowCount > 0 && <Badge tone="red" className="ml-2">{lowCount} low</Badge>}</Td>
                   <Td>{p.is_active ? <Badge tone="green">Live</Badge> : <Badge tone="grey">Hidden</Badge>}{p.is_featured && <Badge tone="gold" className="ml-1">Featured</Badge>}</Td>
                 </tr>
@@ -135,12 +135,12 @@ function ProductForm({ product, categories, onSaved }: { product: ProductRow | n
         if (error) throw error
         return product.id
       }
-      const price = rupeesInput(f.price)
+      const price = aedInput(f.price)
       if (!price) throw new Error('Enter the selling price for the first variant.')
       const { data, error } = await db.from('products').insert(row).select('id').single()
       if (error) throw error
       const { data: v, error: e2 } = await db.from('product_variants').insert({
-        product_id: data.id, sku: f.sku.trim() || slug.toUpperCase().slice(0, 40), name: 'Default', price_paise: price, mrp_paise: rupeesInput(f.mrp) || null,
+        product_id: data.id, sku: f.sku.trim() || slug.toUpperCase().slice(0, 40), name: 'Default', price_paise: price, mrp_paise: aedInput(f.mrp) || null,
       }).select('id').single()
       if (e2) throw e2
       const stock = parseInt(f.stock || '0', 10)
@@ -170,8 +170,8 @@ function ProductForm({ product, categories, onSaved }: { product: ProductRow | n
       </div>
       {!product && (
         <div className="grid gap-4 sm:col-span-2 sm:grid-cols-4">
-          <InputField label="Price ₹" inputMode="decimal" value={f.price} onChange={(e) => set('price', e.target.value)} required />
-          <InputField label="MRP ₹ (optional)" inputMode="decimal" value={f.mrp} onChange={(e) => set('mrp', e.target.value)} />
+          <InputField label="Price AED" inputMode="decimal" value={f.price} onChange={(e) => set('price', e.target.value)} required />
+          <InputField label="Was price AED (optional)" inputMode="decimal" value={f.mrp} onChange={(e) => set('mrp', e.target.value)} />
           <InputField label="Opening stock" inputMode="numeric" value={f.stock} onChange={(e) => set('stock', e.target.value.replace(/\D/g, ''))} />
           <InputField label="SKU" value={f.sku} onChange={(e) => set('sku', e.target.value)} placeholder="auto" />
         </div>
@@ -197,12 +197,12 @@ function VariantsEditor({ productId, variants }: { productId: string; variants: 
     <section className="mb-6">
       <h2 className="mb-2 font-semibold text-navy-900">Variants (sizes, colours, storage)</h2>
       {err && <div className="mb-2"><Alert tone="error">{err}</Alert></div>}
-      <Table head={['SKU / name', 'Price ₹', 'MRP ₹', 'Stock', 'Change stock', 'Live']}>
+      <Table head={['SKU / name', 'Price AED', 'Was AED', 'Stock', 'Change stock', 'Live']}>
         {[...variants].sort((a, b) => a.name.localeCompare(b.name)).map((v) => (
           <tr key={v.id}>
             <Td><span className="font-mono text-xs">{v.sku}</span><input className="input mt-1 h-8 text-sm" defaultValue={v.name} aria-label="Variant name" onBlur={(e) => e.target.value !== v.name && run(() => db.from('product_variants').update({ name: e.target.value }).eq('id', v.id))} /></Td>
-            <Td><input className="input h-8 w-28" defaultValue={(v.price_paise / 100).toString()} inputMode="decimal" aria-label="Price" onBlur={(e) => { const p = rupeesInput(e.target.value); if (p && p !== v.price_paise) run(() => db.from('product_variants').update({ price_paise: p }).eq('id', v.id)) }} /></Td>
-            <Td><input className="input h-8 w-28" defaultValue={v.mrp_paise ? (v.mrp_paise / 100).toString() : ''} inputMode="decimal" aria-label="MRP" onBlur={(e) => { const p = e.target.value ? rupeesInput(e.target.value) : null; if (p !== v.mrp_paise) run(() => db.from('product_variants').update({ mrp_paise: p }).eq('id', v.id)) }} /></Td>
+            <Td><input className="input h-8 w-28" defaultValue={(v.price_paise / 100).toString()} inputMode="decimal" aria-label="Price" onBlur={(e) => { const p = aedInput(e.target.value); if (p && p !== v.price_paise) run(() => db.from('product_variants').update({ price_paise: p }).eq('id', v.id)) }} /></Td>
+            <Td><input className="input h-8 w-28" defaultValue={v.mrp_paise ? (v.mrp_paise / 100).toString() : ''} inputMode="decimal" aria-label="MRP" onBlur={(e) => { const p = e.target.value ? aedInput(e.target.value) : null; if (p !== v.mrp_paise) run(() => db.from('product_variants').update({ mrp_paise: p }).eq('id', v.id)) }} /></Td>
             <Td><span className={v.stock <= v.low_stock_threshold ? 'font-bold text-danger' : ''}>{v.stock}</span></Td>
             <Td><StockChange onApply={(delta, reason) => run(() => db.rpc('adjust_stock', { p_variant: v.id, p_delta: delta, p_reason: reason }))} /></Td>
             <Td><input type="checkbox" className="size-4 accent-gold-500" checked={v.is_active} aria-label="Variant live" onChange={(e) => run(() => db.from('product_variants').update({ is_active: e.target.checked }).eq('id', v.id))} /></Td>
@@ -230,17 +230,17 @@ function StockChange({ onApply }: { onApply: (delta: number, reason: string) => 
 function AddVariant({ productId, onDone, onError }: { productId: string; onDone: () => void; onError: (e: string) => void }) {
   const [f, setF] = useState({ name: '', sku: '', price: '', mrp: '' })
   const add = async () => {
-    const price = rupeesInput(f.price)
+    const price = aedInput(f.price)
     if (!f.name || !f.sku || !price) return onError('Variant name, SKU and price are required.')
-    const { error } = await requireSupabase().from('product_variants').insert({ product_id: productId, name: f.name, sku: f.sku.trim().toUpperCase(), price_paise: price, mrp_paise: rupeesInput(f.mrp) || null, options: { size: f.name } })
+    const { error } = await requireSupabase().from('product_variants').insert({ product_id: productId, name: f.name, sku: f.sku.trim().toUpperCase(), price_paise: price, mrp_paise: aedInput(f.mrp) || null, options: { size: f.name } })
     if (error) onError(friendlyError(error)); else { setF({ name: '', sku: '', price: '', mrp: '' }); onDone() }
   }
   return (
     <div className="card mt-3 grid gap-2 p-3 sm:grid-cols-5 sm:items-end">
       <InputField label="New variant (e.g. size M)" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
       <InputField label="SKU" value={f.sku} onChange={(e) => setF({ ...f, sku: e.target.value })} />
-      <InputField label="Price ₹" inputMode="decimal" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} />
-      <InputField label="MRP ₹" inputMode="decimal" value={f.mrp} onChange={(e) => setF({ ...f, mrp: e.target.value })} />
+      <InputField label="Price AED" inputMode="decimal" value={f.price} onChange={(e) => setF({ ...f, price: e.target.value })} />
+      <InputField label="Was price AED" inputMode="decimal" value={f.mrp} onChange={(e) => setF({ ...f, mrp: e.target.value })} />
       <Button size="sm" onClick={add}><Plus className="size-4" /> Add variant</Button>
     </div>
   )

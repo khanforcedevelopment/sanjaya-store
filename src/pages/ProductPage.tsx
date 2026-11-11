@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronRight, Heart, MapPin, ShieldCheck, Truck, CalendarClock, Star, PackageX } from 'lucide-react'
@@ -12,7 +12,8 @@ import { useAuth } from '@/features/account/AuthProvider'
 import { usePincodeCheck, useProduct, useReviews, usePublicSetting, type ProductDetail } from '@/features/catalog/api'
 import { ProductRail, useWishlistActions } from '@/features/catalog/ProductRail'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
+import { EMIRATES, emirateName } from '@/lib/emirates'
 import { formatDate, formatDeliveryWindow } from '@/lib/format'
 import { useDocumentMeta } from '@/lib/meta'
 import { cn } from '@/lib/cn'
@@ -79,7 +80,7 @@ function ProductView({ p }: { p: ProductDetail }) {
     ...(p.brand ? { brand: { '@type': 'Brand', name: p.brand } } : {}),
     ...(p.short_description ? { description: p.short_description } : {}),
     ...(p.images.length ? { image: p.images.map((i) => new URL(i.url, location.origin).href) } : {}),
-    offers: { '@type': 'AggregateOffer', priceCurrency: 'INR', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: p.variants.length,
+    offers: { '@type': 'AggregateOffer', priceCurrency: 'AED', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: p.variants.length,
       availability: p.variants.some((v) => v.stock > 0) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' },
     ...(p.rating_count > 0 ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: Number(p.rating_avg), reviewCount: p.rating_count } } : {}),
   }
@@ -119,12 +120,12 @@ function ProductView({ p }: { p: ProductDetail }) {
           {p.tags.includes('demo') && <p className="mt-3"><Badge tone="amber">Demo product for testing</Badge></p>}
 
           <div className="mt-5"><Price paise={variant.price_paise} mrpPaise={variant.mrp_paise} size="lg" /></div>
-          <p className="mt-1 text-xs text-navy-600/70">Inclusive of all taxes</p>
+          <p className="mt-1 text-xs text-navy-600/70">Inclusive of 5% VAT</p>
 
           {installmentOk && inst?.enabled && variant.price_paise * qty >= (inst.min_order_total_paise ?? 0) && (
             <div className="mt-4 flex items-center gap-3 rounded-2xl border border-gold-400/50 bg-gold-200/30 p-3.5 text-sm">
               <CalendarClock className="size-5 shrink-0 text-gold-700" />
-              <p>Or pay <strong>{formatINR(monthly)}/month</strong> for {inst.count} months. <Link to="/installments" className="font-semibold text-gold-700 underline">Check eligibility</Link></p>
+              <p>Or pay <strong>{formatAED(monthly)}/month</strong> for {inst.count} months. <Link to="/installments" className="font-semibold text-gold-700 underline">Check eligibility</Link></p>
             </div>
           )}
 
@@ -197,23 +198,23 @@ function ProductView({ p }: { p: ProductDetail }) {
 
 function PincodeChecker() {
   const { pincode, setPincode } = usePincode()
-  const [input, setInput] = useState(pincode ?? '')
-  const { data, isFetching } = usePincodeCheck(pincode)
-  const submit = (e: FormEvent) => { e.preventDefault(); if (/^[1-9][0-9]{5}$/.test(input)) setPincode(input) }
+  const { data } = usePincodeCheck(pincode)
   return (
     <div className="mt-6 rounded-2xl border border-navy-100 bg-white p-4">
-      <form onSubmit={submit} className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <MapPin className="size-5 shrink-0 text-gold-600" />
-        <label htmlFor="pin" className="sr-only">Delivery pincode</label>
-        <input id="pin" inputMode="numeric" maxLength={6} value={input} onChange={(e) => setInput(e.target.value.replace(/\D/g, ''))} placeholder="Enter delivery pincode" className="input h-10 flex-1" />
-        <Button type="submit" size="sm" variant="outline" loading={isFetching}>Check</Button>
-      </form>
+        <label htmlFor="pin" className="sr-only">Delivery emirate</label>
+        <select id="pin" value={pincode ?? ''} onChange={(e) => e.target.value && setPincode(e.target.value)} className="input h-10 flex-1">
+          <option value="">Deliver to which emirate?</option>
+          {EMIRATES.map((e) => <option key={e.code} value={e.code}>{e.name}</option>)}
+        </select>
+      </div>
       {pincode && data && (
         <div className="mt-3 text-sm">
-          {!data.serviceable ? <p className="text-danger">Sorry, we do not deliver to {pincode} yet.</p> : (
+          {!data.serviceable ? <p className="text-danger">Sorry, we do not deliver to {emirateName(pincode)} yet.</p> : (
             <>
               <p className="font-semibold text-navy-900">Delivery by {formatDeliveryWindow(data.estimated_min_date, data.estimated_max_date)}</p>
-              <p className="text-navy-700">{data.zone_name}{data.is_remote ? ' (remote area)' : ''} · {data.first_order_free ? <span className="font-semibold text-success">Free delivery on your first order</span> : `Delivery ${formatINR(data.standard_fee_paise ?? 5000)}`}</p>
+              <p className="text-navy-700">{emirateName(pincode)} · {data.first_order_free ? <span className="font-semibold text-success">Free delivery on your first order</span> : `Delivery ${formatAED(data.standard_fee_paise ?? 1500)}`}</p>
             </>
           )}
         </div>

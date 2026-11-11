@@ -10,7 +10,7 @@ const renderAt = (path: string) =>
 describe('routing (no backend configured)', () => {
   it('renders the home page with an opening-soon notice', async () => {
     renderAt('/')
-    expect(await screen.findByRole('heading', { level: 1, name: /Luxury, delivered across India/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: /Luxury, delivered across the UAE/ })).toBeInTheDocument()
     expect(screen.getByText(/opening soon/i)).toBeInTheDocument()
   })
 

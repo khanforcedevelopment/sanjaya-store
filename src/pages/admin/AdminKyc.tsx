@@ -11,7 +11,7 @@ type App = {
   document_paths: string[]; risk_flags: string[]; decision_reasons: string[]; created_at: string
   user: { full_name: string | null; phone: string | null } | null
 }
-const DOC: Record<string, string> = { pan: 'PAN', passport: 'Passport', driving_licence: 'Driving licence', voter_id: 'Voter ID' }
+const DOC: Record<string, string> = { emirates_id: 'Emirates ID', passport: 'Passport', driving_licence: 'Driving licence', pan: 'PAN (India)', voter_id: 'Voter ID (India)' }
 
 function Files({ paths }: { paths: string[] }) {
   const db = requireSupabase()
@@ -58,7 +58,7 @@ function AppCard({ a }: { a: App }) {
           <Badge tone={a.status === 'approved' ? 'green' : a.status === 'rejected' ? 'red' : 'amber'}>{a.status.replace('_', ' ')}</Badge>
           {a.risk_flags.map((f) => <Badge key={f} tone="red">{f.replace('_', ' ')}</Badge>)}
         </div>
-        <p className="mt-1 text-navy-700">{a.user?.phone} · submitted {new Date(a.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+        <p className="mt-1 text-navy-700">{a.user?.phone} · submitted {new Date(a.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</p>
         <dl className="mt-3 grid grid-cols-[120px_1fr] gap-1">
           <dt className="text-navy-600">Document</dt><dd>{DOC[a.document_type ?? ''] ?? a.document_type} ending <strong>{a.document_last4}</strong></dd>
           <dt className="text-navy-600">Name on it</dt><dd>{a.name_on_document}</dd>

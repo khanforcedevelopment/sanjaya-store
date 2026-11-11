@@ -1,3 +1,5 @@
+import { localUaeMobile } from '@/lib/phone'
+import { emirateName } from '@/lib/emirates'
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
@@ -14,7 +16,7 @@ import { useQuote } from '@/features/cart/useQuote'
 import { OrderSummary } from '@/features/cart/OrderSummary'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
 import { startPayment } from '@/features/payments/startPayment'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { useDocumentMeta } from '@/lib/meta'
 import type { AddressInput, PlacedOrder } from '@/lib/types'
 import { cn } from '@/lib/cn'
@@ -47,8 +49,8 @@ export function CheckoutPage() {
   const laterPay = schedule?.[schedule.length - 1] ?? 0
   const offerInstallments = !!(inst?.enabled && q?.installment.products_eligible && schedule)
   const amountReasons = q && inst ? [
-    q.total_paise < inst.min_order_total_paise ? `Order must be at least ${formatINR(inst.min_order_total_paise)}` : null,
-    inst.max_order_total_paise && q.total_paise > inst.max_order_total_paise ? `Order must be at most ${formatINR(inst.max_order_total_paise)}` : null,
+    q.total_paise < inst.min_order_total_paise ? `Order must be at least ${formatAED(inst.min_order_total_paise)}` : null,
+    inst.max_order_total_paise && q.total_paise > inst.max_order_total_paise ? `Order must be at most ${formatAED(inst.max_order_total_paise)}` : null,
   ].filter((r): r is string => !!r) : []
   const instReasons = [...(elig?.reasons ?? []), ...amountReasons]
   const canInstall = offerInstallments && !!elig?.eligible && amountReasons.length === 0
@@ -98,7 +100,7 @@ export function CheckoutPage() {
             <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-navy-900"><MapPin className="size-5 text-gold-600" /> Delivery address</h2>
             {addrLoading ? <Skeleton className="h-28" /> : showForm ? (
               <AddressForm busy={saveAddress.isPending} submitLabel="Use this address"
-                initial={{ ...emptyAddress, recipient_name: profile?.full_name ?? '', phone: profile?.phone?.replace(/^\+91/, '') ?? '' }}
+                initial={{ ...emptyAddress, recipient_name: profile?.full_name ?? '', phone: localUaeMobile(profile?.phone) }}
                 onCancel={addresses?.length ? () => setAdding(false) : undefined} onSubmit={onNewAddress} />
             ) : (
               <>
@@ -117,7 +119,7 @@ export function CheckoutPage() {
                 <Button variant="ghost" size="sm" className="mt-3" onClick={() => setAdding(true)}><Plus className="size-4" /> Add a new address</Button>
               </>
             )}
-            {q?.delivery.pincode && !q.delivery.serviceable && <div className="mt-4"><Alert tone="error">Sorry, we do not deliver to pincode {q.delivery.pincode} yet. Please choose another address.</Alert></div>}
+            {q?.delivery.pincode && !q.delivery.serviceable && <div className="mt-4"><Alert tone="error">Sorry, we do not deliver to {emirateName(q.delivery.pincode)} yet. Please choose another address.</Alert></div>}
           </section>
 
           <section className="card p-5">
@@ -125,14 +127,14 @@ export function CheckoutPage() {
             <div className="grid gap-3" role="radiogroup" aria-label="How do you want to pay?">
               <button type="button" role="radio" aria-checked={!useInst} onClick={() => setMode('full')}
                 className={cn('rounded-2xl border p-4 text-left text-sm transition', !useInst ? 'border-gold-500 bg-gold-200/20 ring-1 ring-gold-500' : 'border-navy-100 hover:border-gold-400')}>
-                <span className="block font-semibold text-navy-900">Pay in full by card {q && <span className="font-bold">· {formatINR(q.total_paise)}</span>}</span>
+                <span className="block font-semibold text-navy-900">Pay in full by card {q && <span className="font-bold">· {formatAED(q.total_paise)}</span>}</span>
                 <span className="mt-1 block text-navy-700">You will pay on Stripe's secure page right after placing the order. Unpaid orders are released after 60 minutes.</span>
               </button>
               {offerInstallments && (
                 <div className={cn('rounded-2xl border p-4 text-sm transition', useInst ? 'border-gold-500 bg-gold-200/20 ring-1 ring-gold-500' : 'border-navy-100')}>
                   <button type="button" role="radio" aria-checked={useInst} disabled={!canInstall} onClick={() => setMode('installment')} className="w-full text-left disabled:cursor-not-allowed">
-                    <span className="flex items-center gap-2 font-semibold text-navy-900"><CalendarClock className="size-4 text-gold-700" /> Pay in {schedule!.length} monthly installments · {formatINR(firstPay)} today</span>
-                    <span className="mt-1 block text-navy-700">No interest, no fee. {schedule!.length - 1} more payments of about {formatINR(laterPay)}, one each month.</span>
+                    <span className="flex items-center gap-2 font-semibold text-navy-900"><CalendarClock className="size-4 text-gold-700" /> Pay in {schedule!.length} monthly installments · {formatAED(firstPay)} today</span>
+                    <span className="mt-1 block text-navy-700">No interest, no fee. {schedule!.length - 1} more payments of about {formatAED(laterPay)}, one each month.</span>
                   </button>
                   {!canInstall && user && elig && (
                     <ul className="mt-3 space-y-1 text-navy-700">
@@ -152,7 +154,7 @@ export function CheckoutPage() {
                 </div>
               )}
             </div>
-            <p className="mt-3 flex items-center gap-2 text-xs text-navy-600/80"><ShieldCheck className="size-4 text-success" /> Every order is checked and approved by our team before dispatch from Mumbai.</p>
+            <p className="mt-3 flex items-center gap-2 text-xs text-navy-600/80"><ShieldCheck className="size-4 text-success" /> Every order is checked and approved by our team before dispatch.</p>
           </section>
 
           <section className="card p-5">
@@ -164,7 +166,7 @@ export function CheckoutPage() {
             {q?.errors.map((e) => <Alert key={e} tone="warning">{e}</Alert>)}
             {error && <Alert tone="error">{error}</Alert>}
             <Button size="lg" className="w-full" disabled={blocked || showForm} loading={place.isPending} onClick={() => { setError(null); place.mutate(selected!) }}>
-              Place order{q ? ` · pay ${formatINR(payNow)}` : ''}
+              Place order{q ? ` · pay ${formatAED(payNow)}` : ''}
             </Button>
             <p className="text-center text-xs text-navy-600/70">By placing the order you agree to our <a href="/policies/terms" className="underline">Terms</a> and <a href="/policies/returns" className="underline">Returns policy</a>.</p>
           </OrderSummary>

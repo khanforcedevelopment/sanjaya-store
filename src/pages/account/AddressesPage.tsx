@@ -1,3 +1,4 @@
+import { displayUaeMobile, localUaeMobile } from '@/lib/phone'
 import { useState } from 'react'
 import { MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { PageTitle, EmptyState, Badge, Skeleton, Alert } from '@/components/ui/misc'
@@ -26,7 +27,7 @@ export function AddressesPage() {
 
   if (editing) {
     const initial = editing === 'new'
-      ? { ...emptyAddress, recipient_name: profile?.full_name ?? '', phone: profile?.phone?.replace(/^\+91/, '') ?? '' }
+      ? { ...emptyAddress, recipient_name: profile?.full_name ?? '', phone: localUaeMobile(profile?.phone) }
       : toDraft(editing)
     return (
       <>
@@ -62,7 +63,7 @@ export function AddressesPage() {
                   {a.is_default && <Badge tone="gold">Default</Badge>}
                   {a.location_source === 'gps' && <Badge tone="navy">Map pin</Badge>}
                 </div>
-                <p className="mt-2 text-sm font-medium text-navy-800">{a.recipient_name} · {a.phone.replace(/^\+91(\d{5})(\d{5})$/, '+91 $1 $2')}</p>
+                <p className="mt-2 text-sm font-medium text-navy-800">{a.recipient_name} · {displayUaeMobile(a.phone)}</p>
                 <address className="mt-1 flex-1 text-sm not-italic text-navy-700">{formatAddressLines(a).map((l) => <span key={l} className="block">{l}</span>)}</address>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" onClick={() => setEditing(a)}><Pencil className="size-3.5" /> Edit</Button>

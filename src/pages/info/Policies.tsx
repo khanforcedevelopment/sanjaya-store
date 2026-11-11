@@ -1,3 +1,4 @@
+import { formatAED } from '@/lib/money'
 import { Link, useParams } from 'react-router-dom'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { usePublicSetting } from '@/features/catalog/api'
@@ -15,7 +16,7 @@ function Grievance({ s }: { s: StoreInfo }) {
     <>
       <h2>Grievance officer</h2>
       {s.grievance_officer
-        ? <p>{s.grievance_officer}. We acknowledge complaints within 48 hours and resolve them within one month, as required by the Consumer Protection (E-Commerce) Rules, 2020.</p>
+        ? <p>{s.grievance_officer}. We acknowledge complaints within 48 hours and resolve them within one month, in line with UAE consumer protection law.</p>
         : <p>Complaints are handled by our customer care team (contact details above). We acknowledge complaints within 48 hours and resolve them within one month.</p>}
     </>
   )
@@ -26,7 +27,7 @@ function Terms({ s }: { s: StoreInfo }) {
     <InfoPage title="Terms & conditions" description={`Terms for shopping at ${s.name}.`} updated={UPDATED} draft>
       <p>{s.name} is operated by <strong>{s.legal_name}</strong>, {s.registered_address}. Orders are packed and dispatched from {s.dispatch_address}. By placing an order you agree to these terms.</p>
       <h2>Orders and approval</h2>
-      <ul><li>Prices are in Indian rupees (₹) and include applicable taxes.</li><li>Every order is checked and approved by our team before dispatch. We may cancel an order (with a full refund) if an item is out of stock, priced in error, or the order looks fraudulent.</li><li>Unpaid orders are released after the payment window shown at checkout.</li></ul>
+      <ul><li>Prices are in UAE dirhams (AED) and include 5% VAT.</li><li>Every order is checked and approved by our team before dispatch. We may cancel an order (with a full refund) if an item is out of stock, priced in error, or the order looks fraudulent.</li><li>Unpaid orders are released after the payment window shown at checkout.</li></ul>
       <h2>Payment</h2>
       <p>Card payments are processed securely by Stripe. We never see or store your full card number. For monthly installments, see the <Link to="/installments">installment terms</Link>.</p>
       <h2>Delivery</h2>
@@ -38,7 +39,7 @@ function Terms({ s }: { s: StoreInfo }) {
       <h2>Contact</h2>
       <Contact s={s} />
       <Grievance s={s} />
-      <p>These terms are governed by the laws of India. Courts at Mumbai have jurisdiction, without affecting your rights as a consumer.</p>
+      <p>These terms are governed by the laws of the United Arab Emirates as applied in the Emirate of Ajman. Courts in Ajman have jurisdiction, without affecting your rights as a consumer.</p>
     </InfoPage>
   )
 }
@@ -46,13 +47,13 @@ function Terms({ s }: { s: StoreInfo }) {
 function Privacy({ s }: { s: StoreInfo }) {
   return (
     <InfoPage title="Privacy policy" description={`How ${s.name} handles your personal data.`} updated={UPDATED} draft>
-      <p>{s.legal_name} ("we") processes your personal data to run this store, in line with India's Digital Personal Data Protection Act, 2023.</p>
+      <p>{s.legal_name} ("we") processes your personal data to run this store, in line with the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021).</p>
       <h2>What we collect and why</h2>
       <ul>
         <li><strong>Account</strong>: email or mobile number, name, to sign you in and contact you about orders.</li>
         <li><strong>Addresses</strong>: to deliver your orders. Your exact map location is saved only if you tap "Use my location" and allow it.</li>
         <li><strong>Orders and payments</strong>: items, amounts and payment status. Card details are handled by Stripe, not by us.</li>
-        <li><strong>Identity check</strong> (only if you apply for installments): document type, a secure fingerprint and the last 4 characters of the document number, your name as printed, and the photos you upload. We do not collect Aadhaar numbers. Photos can be viewed only by our Super Admin.</li>
+        <li><strong>Identity check</strong> (only if you apply for installments): document type, a secure fingerprint and the last 4 characters of the document number, your name as printed, and the photos you upload. We do not store your full Emirates ID number. Photos can be viewed only by our Super Admin.</li>
         <li><strong>Support messages</strong> you send us.</li>
         <li><strong>Marketing</strong>: only if you tick the box in your profile; you can turn it off at any time.</li>
       </ul>
@@ -94,13 +95,13 @@ function Returns({ s, days }: { s: StoreInfo; days: number }) {
 
 function Shipping({ s }: { s: StoreInfo }) {
   const { data: d } = usePublicSetting<{ default_fee_paise?: number; first_order_free?: boolean }>('delivery')
-  const fee = (d?.default_fee_paise ?? 5000) / 100
+  const fee = formatAED(d?.default_fee_paise ?? 1500)
   return (
-    <InfoPage title="Shipping policy" description="Delivery across India from Mumbai." updated={UPDATED} draft>
+    <InfoPage title="Shipping policy" description="Delivery across all seven emirates of the UAE." updated={UPDATED} draft>
       <ul>
         <li>All orders are packed and dispatched from {s.dispatch_address} after our team approves them.</li>
-        <li><strong>Delivery charge</strong>: {d?.first_order_free === false ? '' : 'your first order is delivered free; after that '}₹{fee} per order.</li>
-        <li><strong>Delivery time</strong>: usually 2–7 days after dispatch depending on your pincode; remote areas (North-East, Jammu & Kashmir, Ladakh, islands) up to 12–13 days. Check your pincode on the <Link to="/delivery">delivery page</Link>.</li>
+        <li><strong>Delivery charge</strong>: {d?.first_order_free === false ? '' : 'your first order is delivered free; after that '}{fee} per order.</li>
+        <li><strong>Delivery time</strong>: usually 1–2 days in Dubai, Sharjah and Ajman, and 2–3 days in Abu Dhabi, Umm Al Quwain, Ras Al Khaimah and Fujairah. Check your emirate on the <Link to="/delivery">delivery page</Link>.</li>
         <li>You get updates at every step and can track your order in <Link to="/account/orders">My orders</Link>. If your order is delayed, we tell you why and the new date.</li>
         <li>Our delivery partner asks for the 4-digit delivery code on your order page. If you are not available, we try again or contact you to reschedule.</li>
       </ul>

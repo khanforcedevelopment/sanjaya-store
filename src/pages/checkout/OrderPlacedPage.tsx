@@ -1,3 +1,4 @@
+import { emirateName } from '@/lib/emirates'
 import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -6,7 +7,7 @@ import { Alert, Badge, EmptyState, Skeleton } from '@/components/ui/misc'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { startPayment } from '@/features/payments/startPayment'
 import { requireSupabase, supabase, friendlyError } from '@/lib/supabase'
-import { formatINR } from '@/lib/money'
+import { formatAED } from '@/lib/money'
 import { formatDateTime, formatDeliveryWindow } from '@/lib/format'
 import { STATUS_LABEL, statusTone } from '@/lib/orderStatus'
 import { useDocumentMeta } from '@/lib/meta'
@@ -75,7 +76,7 @@ export function OrderPlacedPage() {
   const plan = (Array.isArray(o.plan) ? o.plan[0] : o.plan) as { installments: { seq: number; amount_paise: number }[] } | null | undefined
   const firstInstallment = plan?.installments.find((i) => i.seq === 1)?.amount_paise
   const dueNow = o.payment_mode === 'installment' && firstInstallment ? firstInstallment : o.total_paise
-  const payLabel = o.payment_mode === 'installment' ? `Pay first installment ${formatINR(dueNow)}` : `Pay ${formatINR(dueNow)} securely`
+  const payLabel = o.payment_mode === 'installment' ? `Pay first installment ${formatAED(dueNow)}` : `Pay ${formatAED(dueNow)} securely`
   return (
     <div className="container-x max-w-3xl py-10">
       <div className="text-center">
@@ -89,7 +90,7 @@ export function OrderPlacedPage() {
       {o.status === 'payment_pending' && returned !== 'success' && (
         <div className="mt-6 space-y-3">
           <Alert tone="warning" title={returned === 'cancelled' ? 'Payment not completed' : 'Payment pending'}>
-            <span className="flex items-center gap-1"><Clock className="size-4" /> We hold your items{o.payment_expires_at ? ` until ${formatDateTime(o.payment_expires_at)}` : ''}. Pay {formatINR(dueNow)} by card to confirm the order{o.payment_mode === 'installment' ? ' (first of your monthly installments)' : ''}.</span>
+            <span className="flex items-center gap-1"><Clock className="size-4" /> We hold your items{o.payment_expires_at ? ` until ${formatDateTime(o.payment_expires_at)}` : ''}. Pay {formatAED(dueNow)} by card to confirm the order{o.payment_mode === 'installment' ? ' (first of your monthly installments)' : ''}.</span>
           </Alert>
           {payError && <Alert tone="error">{payError}</Alert>}
           <Button size="lg" className="w-full" loading={paying} onClick={pay}>{payLabel}</Button>
@@ -107,14 +108,14 @@ export function OrderPlacedPage() {
               <p className="line-clamp-1 font-semibold text-navy-900">{i.product_name}</p>
               <p className="text-sm text-navy-600/80">{i.variant_name} · Qty {i.quantity}</p>
             </div>
-            <p className="font-semibold">{formatINR(i.line_total_paise)}</p>
+            <p className="font-semibold">{formatAED(i.line_total_paise)}</p>
           </div>
         ))}
         <dl className="space-y-1 p-4 text-sm">
-          <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatINR(o.subtotal_paise)}</dd></div>
-          {o.discount_paise > 0 && <div className="flex justify-between text-success"><dt>Discount {o.coupon_code}</dt><dd>− {formatINR(o.discount_paise)}</dd></div>}
-          <div className="flex justify-between"><dt>Delivery</dt><dd>{o.delivery_fee_paise ? formatINR(o.delivery_fee_paise) : 'FREE'}</dd></div>
-          <div className="flex justify-between text-base font-bold text-navy-900"><dt>Total</dt><dd>{formatINR(o.total_paise)}</dd></div>
+          <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatAED(o.subtotal_paise)}</dd></div>
+          {o.discount_paise > 0 && <div className="flex justify-between text-success"><dt>Discount {o.coupon_code}</dt><dd>− {formatAED(o.discount_paise)}</dd></div>}
+          <div className="flex justify-between"><dt>Delivery</dt><dd>{o.delivery_fee_paise ? formatAED(o.delivery_fee_paise) : 'FREE'}</dd></div>
+          <div className="flex justify-between text-base font-bold text-navy-900"><dt>Total</dt><dd>{formatAED(o.total_paise)}</dd></div>
           {o.payment_mode === 'installment' && plan && <div className="flex justify-between text-navy-700"><dt>Monthly installments</dt><dd>{plan.installments.length} payments · <a href="/account/installments" className="font-semibold text-gold-700 underline">View plan</a></dd></div>}
         </dl>
       </div>
@@ -123,14 +124,14 @@ export function OrderPlacedPage() {
           <p className="eyebrow mb-2">Delivering to</p>
           <p className="font-semibold">{addr.recipient_name} · {addr.phone}</p>
           <p>{addr.house}, {addr.street}</p>
-          <p>{addr.city}, {addr.state} {addr.pincode}</p>
+          <p>{addr.city}, {emirateName(addr.pincode) || addr.state}</p>
         </div>
         <div className="card p-4 text-sm">
           <p className="eyebrow mb-2">What happens next</p>
           <ol className="list-decimal space-y-1 pl-4">
             {o.status === 'payment_pending' && <li>Pay by card to confirm.</li>}
             <li>Our team checks and approves your order.</li>
-            <li>Dispatched from Mumbai{o.estimated_min_date ? `, arriving ${formatDeliveryWindow(o.estimated_min_date, o.estimated_max_date)}` : ''}.</li>
+            <li>Delivered to your door{o.estimated_min_date ? `, arriving ${formatDeliveryWindow(o.estimated_min_date, o.estimated_max_date)}` : ''}.</li>
           </ol>
         </div>
       </div>

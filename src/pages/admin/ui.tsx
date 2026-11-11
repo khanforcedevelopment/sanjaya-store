@@ -37,8 +37,8 @@ export function Stat({ label, value, tone }: { label: string; value: ReactNode; 
   )
 }
 
-/** Parses "1,299.50" style rupees into paise; null when invalid. */
-export function rupeesInput(v: string): number | null {
-  const n = Number(v.replace(/[,\s₹]/g, ''))
+/** Parses "1,299.50" or "AED 1,299.50" into fils; null when invalid. */
+export function aedInput(v: string): number | null {
+  const n = Number(v.replace(/aed/gi, '').replace(/[,\s]/g, ''))
   return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null
 }

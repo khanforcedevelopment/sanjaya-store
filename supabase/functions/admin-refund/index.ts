@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     if (!p || !p.stripe_payment_intent_id || !['succeeded', 'partially_refunded'].includes(p.status)) return json(req, { error: 'This payment cannot be refunded.' }, 400)
     const remaining = p.amount_paise - p.amount_refunded_paise
     const amount = amount_paise == null ? remaining : Number(amount_paise)
-    if (!Number.isInteger(amount) || amount <= 0 || amount > remaining) return json(req, { error: `Refund must be between ₹0.01 and the remaining ₹${(remaining / 100).toFixed(2)}.` }, 400)
+    if (!Number.isInteger(amount) || amount <= 0 || amount > remaining) return json(req, { error: `Refund must be between AED 0.01 and the remaining AED ${(remaining / 100).toFixed(2)}.` }, 400)
     const note = String(reason ?? '').slice(0, 300)
 
     const refund = await stripe<Refund>('refunds', { payment_intent: p.stripe_payment_intent_id, amount, metadata: { order_id: p.order_id, reason: note, by: user.id } },
