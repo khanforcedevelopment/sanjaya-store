@@ -51,3 +51,10 @@ Last updated: 2026-11-03
 - [ ] Before launch: Admin → Products → **Remove demo products** (the 1000+ sample products are for testing only).
 - [ ] Banner photos for the homepage. Optional: an AI image service key (OpenAI or Google, paid per image) if you want AI-made banner photos; product photos should be real photos of your stock (phone camera on white background is fine).
 - [ ] Staff list with roles: Operations, Delivery, Collections, Support.
+
+## Glass admin dashboard (2026-11-11)
+- [ ] Netlify → Deploys → **Trigger deploy → Deploy site** (main is not auto-deploying). Or drag-drop `sanjaya-store/deploy/dist-2026-11-11-admin-glass.zip` (unzipped `dist` folder).
+- [ ] Settings → Dashboard: set your real monthly sales target and warehouse location (lat/lng).
+- [ ] Staff: give each rider the **delivery** role. On their phone they open Staff panel → My deliveries → **Share live location**.
+- [ ] Products → select → Bulk edit → **Cost price**, so profit and margin in Reports are real.
+- Later (needs accounts/keys): WhatsApp/SMS on dispatch + delivery (Twilio/WhatsApp Business), Google Maps instead of OpenStreetMap.

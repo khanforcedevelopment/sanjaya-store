@@ -1,7 +1,7 @@
 import { emirateName } from '@/lib/emirates'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Camera, MapPin, Phone } from 'lucide-react'
+import { Camera, LocateFixed, MapPin, Phone } from 'lucide-react'
 import { Alert, Badge, EmptyState } from '@/components/ui/misc'
 import { Button } from '@/components/ui/Button'
 import { InputField, SelectField } from '@/components/ui/Field'
@@ -44,7 +44,7 @@ function StopCard({ s }: { s: Stop }) {
     setBusy(true)
     const { error } = await db.rpc('transition_order', { p_order: s.order_id, p_to: 'out_for_delivery', p_note: 'Out for delivery', p_customer_visible: true })
     setBusy(false)
-    if (error) setErr(friendlyError(error)); else done('Marked out for delivery')
+    if (error) setErr(friendlyError(error)); else { db.rpc('rider_set_status', { p_status: 'on_route' }).then(() => undefined); done('Marked out for delivery') }
   }
 
   const deliver = async () => {
@@ -122,6 +122,54 @@ function StopCard({ s }: { s: Stop }) {
   )
 }
 
+const STATUSES: [string, string][] = [['available', 'Available'], ['on_route', 'On route'], ['maintenance', 'Vehicle issue'], ['offline', 'Off duty']]
+
+/** Sends the rider's GPS position every ~15 seconds while sharing is on and this page is open. */
+function LocationShare() {
+  const db = requireSupabase()
+  const qc = useQueryClient()
+  const [on, setOn] = useState(() => { try { return localStorage.getItem('rider-share') === '1' } catch { return false } })
+  const [msg, setMsg] = useState<string | null>(null)
+  const last = useRef(0)
+  const { data: me } = useQuery({
+    queryKey: ['rider', 'me'],
+    queryFn: async () => { const { data } = await db.from('rider_profiles').select('status, vehicle_type, plate').maybeSingle(); return data },
+  })
+  useEffect(() => {
+    try { localStorage.setItem('rider-share', on ? '1' : '0') } catch { /* private mode */ }
+    if (!on) return
+    if (!('geolocation' in navigator)) return
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (Date.now() - last.current < 14_000) return
+        last.current = Date.now()
+        db.rpc('rider_ping', { p_lat: pos.coords.latitude, p_lng: pos.coords.longitude, p_accuracy: pos.coords.accuracy })
+          .then(({ error }) => setMsg(error ? friendlyError(error) : `Location shared at ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`))
+      },
+      (e) => setMsg(e.code === e.PERMISSION_DENIED ? 'Location is blocked. Allow location for this site in your phone settings.' : 'Waiting for GPS…'),
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 },
+    )
+    return () => navigator.geolocation.clearWatch(id)
+  }, [on, db])
+  const setStatus = async (s: string) => {
+    const { error } = await db.rpc('rider_set_status', { p_status: s })
+    if (error) setMsg(friendlyError(error)); else qc.invalidateQueries({ queryKey: ['rider', 'me'] })
+  }
+  return (
+    <section className="card mb-4 flex flex-wrap items-center gap-3 p-4">
+      <button type="button" onClick={() => setOn(!on)} className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${on ? 'bg-[#0f8f62] text-white' : 'bg-[#141414] text-white'}`} aria-pressed={on}>
+        <LocateFixed className="size-4" /> {on ? 'Sharing live location' : 'Share live location'}
+      </button>
+      <label className="flex items-center gap-2 text-sm">My status
+        <select className="input h-10 w-auto py-0 text-sm" value={me?.status ?? 'offline'} onChange={(e) => setStatus(e.target.value)}>
+          {STATUSES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+      </label>
+      <p className="w-full text-xs text-navy-700/80 sm:w-auto">{on && !('geolocation' in navigator) ? 'This phone cannot share location.' : msg ?? 'Keep this page open while you deliver so operations can see you on the map.'}</p>
+    </section>
+  )
+}
+
 export function RiderQueue() {
   const db = requireSupabase()
   const { data, error, isLoading } = useQuery({
@@ -132,6 +180,7 @@ export function RiderQueue() {
   return (
     <>
       <AdminTitle title="My deliveries" subtitle="Ask the customer for the 4-digit code in their order before you hand over the parcel." />
+      <LocationShare />
       {error && <Alert tone="error">{friendlyError(error)}</Alert>}
       {!isLoading && data?.length === 0 && <EmptyState title="No deliveries assigned">New orders appear here when operations assigns them to you.</EmptyState>}
       <div className="grid gap-4 lg:grid-cols-2">{data?.map((s) => <StopCard key={s.order_id} s={s} />)}</div>

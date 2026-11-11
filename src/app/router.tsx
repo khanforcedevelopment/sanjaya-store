@@ -23,7 +23,7 @@ const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout').then((m) => (
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })))
 const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders').then((m) => ({ default: m.AdminOrders })))
 const AdminOrderDetail = lazy(() => import('@/pages/admin/AdminOrderDetail').then((m) => ({ default: m.AdminOrderDetail })))
-const AdminProducts = lazy(() => import('@/pages/admin/AdminProducts').then((m) => ({ default: m.AdminProducts })))
+const AdminProducts = lazy(() => import('@/pages/admin/AdminProductList').then((m) => ({ default: m.AdminProducts })))
 const AdminProductEdit = lazy(() => import('@/pages/admin/AdminProducts').then((m) => ({ default: m.AdminProductEdit })))
 const AdminImport = lazy(() => import('@/pages/admin/AdminImport').then((m) => ({ default: m.AdminImport })))
 const AdminMarketing = lazy(() => import('@/pages/admin/AdminMarketing').then((m) => ({ default: m.AdminMarketing })))
@@ -44,6 +44,10 @@ const PolicyPage = lazy(() => import('@/pages/info/Policies').then((m) => ({ def
 const AboutPage = lazy(() => import('@/pages/info/AboutContact').then((m) => ({ default: m.AboutPage })))
 const ContactPage = lazy(() => import('@/pages/info/AboutContact').then((m) => ({ default: m.ContactPage })))
 const InstallPage = lazy(() => import('@/pages/info/AboutContact').then((m) => ({ default: m.InstallPage })))
+const AdminStock = lazy(() => import('@/pages/admin/AdminInsights').then((m) => ({ default: m.AdminStock })))
+const AdminCustomers = lazy(() => import('@/pages/admin/AdminInsights').then((m) => ({ default: m.AdminCustomers })))
+const AdminReports = lazy(() => import('@/pages/admin/AdminInsights').then((m) => ({ default: m.AdminReports })))
+const AdminFleet = lazy(() => import('@/pages/admin/AdminFleet').then((m) => ({ default: m.AdminFleet })))
 const RiderQueue = lazy(() => import('@/pages/admin/RiderQueue').then((m) => ({ default: m.RiderQueue })))
 
 /**
@@ -101,6 +105,10 @@ export const routes: RouteObject[] = [
       { path: 'rider', element: <RequireAuth roles={['delivery']}><RiderQueue /></RequireAuth> },
       { path: 'products', element: <RequireAuth roles={['operations']}><AdminProducts /></RequireAuth> },
       { path: 'products/:id', element: <RequireAuth roles={['operations']}><AdminProductEdit /></RequireAuth> },
+      { path: 'stock', element: <RequireAuth roles={['operations']}><AdminStock /></RequireAuth> },
+      { path: 'customers', element: <RequireAuth roles={['operations', 'support']}><AdminCustomers /></RequireAuth> },
+      { path: 'reports', element: <RequireAuth roles={['operations']}><AdminReports /></RequireAuth> },
+      { path: 'fleet', element: <RequireAuth roles={['operations']}><AdminFleet /></RequireAuth> },
       { path: 'import', element: <RequireAuth roles={['operations']}><AdminImport /></RequireAuth> },
       { path: 'marketing', element: <RequireAuth roles={['operations']}><AdminMarketing /></RequireAuth> },
       { path: 'delivery', element: <RequireAuth roles={['operations']}><AdminDelivery /></RequireAuth> },

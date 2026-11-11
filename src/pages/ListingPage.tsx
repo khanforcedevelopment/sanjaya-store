@@ -35,11 +35,15 @@ export function ListingPage({ mode }: { mode: 'category' | 'search' | 'deals' })
   const min = sp.get('min') ? Number(sp.get('min')) : null
   const max = sp.get('max') ? Number(sp.get('max')) : null
   const inStock = sp.get('stock') === '1'
+  const onSale = sp.get('sale') === '1'
+  const minRating = sp.get('rating') ? Number(sp.get('rating')) : null
+  const subs = useMemo(() => sp.getAll('sub'), [sp])
   const page = Math.max(1, Number(sp.get('page') ?? 1))
 
   const params = {
     category: mode === 'category' ? slug : null, q: mode === 'search' ? q : null,
     tag: mode === 'deals' ? 'flash-sale' : null, brands, min, max, inStock, sort, limit: PAGE, offset: (page - 1) * PAGE,
+    onSale, minRating, subcategories: subs,
   }
   const { data, isLoading, isFetching } = useProducts(params, mode !== 'search' || q.length > 0)
   const wish = useWishlistActions()
@@ -55,15 +59,20 @@ export function ListingPage({ mode }: { mode: 'category' | 'search' | 'deals' })
     setSp(next, { replace: true })
   }
   const total = data?.facets.total ?? 0
+  const activeCount = brands.length + subs.length + (min !== null || max !== null ? 1 : 0) + (inStock ? 1 : 0) + (onSale ? 1 : 0) + (minRating ? 1 : 0)
   const pages = Math.ceil(total / PAGE)
 
   const filters = (
     <Filters
       facets={data?.facets} brands={brands} min={min} max={max} inStock={inStock}
+      onSale={onSale} minRating={minRating} subs={subs} showCategories={mode !== 'category' || children.length > 0}
+      onSaleChange={(on) => update((p) => (on ? p.set('sale', '1') : p.delete('sale')))}
+      onRating={(r) => update((p) => (r ? p.set('rating', String(r)) : p.delete('rating')))}
+      onSub={(slug, on) => update((p) => { const all = p.getAll('sub').filter((x) => x !== slug); p.delete('sub'); (on ? [...all, slug] : all).forEach((x) => p.append('sub', x)) })}
       onBrand={(b, on) => update((p) => { const all = p.getAll('brand').filter((x) => x !== b); p.delete('brand'); (on ? [...all, b] : all).forEach((x) => p.append('brand', x)) })}
       onPrice={(a, b) => update((p) => { p.delete('min'); p.delete('max'); if (a !== null) p.set('min', String(a)); if (b !== null) p.set('max', String(b)) })}
       onStock={(on) => update((p) => (on ? p.set('stock', '1') : p.delete('stock')))}
-      onClear={() => update((p) => { p.delete('brand'); p.delete('min'); p.delete('max'); p.delete('stock') })}
+      onClear={() => update((p) => { ['brand', 'min', 'max', 'stock', 'sale', 'rating', 'sub'].forEach((k) => p.delete(k)) })}
     />
   )
 
@@ -80,7 +89,7 @@ export function ListingPage({ mode }: { mode: 'category' | 'search' | 'deals' })
           <p className="mt-1 text-sm text-navy-600/80">{isLoading ? 'Loading…' : `${total.toLocaleString('en-GB')} products`}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setFiltersOpen(true)}><SlidersHorizontal className="size-4" /> Filters</Button>
+          <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setFiltersOpen(true)}><SlidersHorizontal className="size-4" /> Filters{activeCount ? ` (${activeCount})` : ''}</Button>
           <label className="sr-only" htmlFor="sort">Sort by</label>
           <select id="sort" value={sort} onChange={(e) => update((p) => p.set('sort', e.target.value))} className="input h-9 w-auto rounded-full py-0 text-sm">
             {SORTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -122,22 +131,45 @@ export function ListingPage({ mode }: { mode: 'category' | 'search' | 'deals' })
   )
 }
 
-function Filters({ facets, brands, min, max, inStock, onBrand, onPrice, onStock, onClear }: {
+function Filters({ facets, brands, min, max, inStock, onSale, minRating, subs, showCategories, onBrand, onPrice, onStock, onSaleChange, onRating, onSub, onClear }: {
   facets?: ListingResult['facets']; brands: string[]; min: number | null; max: number | null; inStock: boolean
+  onSale: boolean; minRating: number | null; subs: string[]; showCategories: boolean
   onBrand: (b: string, on: boolean) => void; onPrice: (min: number | null, max: number | null) => void
-  onStock: (on: boolean) => void; onClear: () => void
+  onStock: (on: boolean) => void; onSaleChange: (on: boolean) => void; onRating: (r: number | null) => void
+  onSub: (slug: string, on: boolean) => void; onClear: () => void
 }) {
   const [showAll, setShowAll] = useState(false)
   const list = facets?.brands ?? []
   const shown = showAll ? list : list.slice(0, 8)
-  const any = brands.length || min !== null || max !== null || inStock
+  const any = brands.length || min !== null || max !== null || inStock || onSale || minRating || subs.length
+  const cats = facets?.categories ?? []
+  const custom = (min !== null || max !== null) && !PRICE_BANDS.some(([, a, b]) => a === min && b === max)
   return (
     <div className="space-y-7 text-sm">
       {any ? <button onClick={onClear} className="font-semibold text-gold-700 hover:underline">Clear all filters</button> : null}
       <fieldset>
         <legend className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-navy-800">Availability</legend>
-        <label className="flex items-center gap-2"><input type="checkbox" checked={inStock} onChange={(e) => onStock(e.target.checked)} className="size-4 accent-gold-500" /> In stock only</label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={inStock} onChange={(e) => onStock(e.target.checked)} className="size-4 accent-gold-500" /> In stock only</label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={onSale} onChange={(e) => onSaleChange(e.target.checked)} className="size-4 accent-gold-500" />
+            <span className="flex-1">On sale</span>{facets?.on_sale ? <span className="text-xs text-navy-600/60">{facets.on_sale}</span> : null}</label>
+        </div>
       </fieldset>
+      {showCategories && (cats.length > 1 || subs.length > 0) && (
+        <fieldset>
+          <legend className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-navy-800">Category</legend>
+          <ul className="space-y-2">
+            {cats.slice(0, 12).map((c) => (
+              <li key={c.slug}>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={subs.includes(c.slug)} onChange={(e) => onSub(c.slug, e.target.checked)} className="size-4 accent-gold-500" />
+                  <span className="flex-1">{c.name}</span><span className="text-xs text-navy-600/60">{c.count}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </fieldset>
+      )}
       <fieldset>
         <legend className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-navy-800">Price</legend>
         <ul className="space-y-2">
@@ -149,7 +181,17 @@ function Filters({ facets, brands, min, max, inStock, onBrand, onPrice, onStock,
             </li>
           ))}
         </ul>
+        <PriceRange key={`${min}-${max}`} min={custom ? min : null} max={custom ? max : null} onApply={onPrice} />
         {facets?.price_min != null && <p className="mt-2 text-xs text-navy-600/60">From {formatAED(facets.price_min)} to {formatAED(facets.price_max ?? facets.price_min)}</p>}
+      </fieldset>
+      <fieldset>
+        <legend className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-navy-800">Customer rating</legend>
+        <ul className="space-y-2">
+          {[4, 3].map((r) => (
+            <li key={r}><label className="flex items-center gap-2"><input type="radio" name="rating" checked={minRating === r} onChange={() => onRating(r)} className="size-4 accent-gold-500" /> <span className="text-gold-600" aria-hidden>{'★'.repeat(r)}{'☆'.repeat(5 - r)}</span> & up</label></li>
+          ))}
+          {minRating ? <li><button onClick={() => onRating(null)} className="text-xs font-semibold text-gold-700">Any rating</button></li> : null}
+        </ul>
       </fieldset>
       {list.length > 0 && (
         <fieldset>
@@ -168,5 +210,20 @@ function Filters({ facets, brands, min, max, inStock, onBrand, onPrice, onStock,
         </fieldset>
       )}
     </div>
+  )
+}
+
+/** Custom AED range under the price bands. */
+function PriceRange({ min, max, onApply }: { min: number | null; max: number | null; onApply: (min: number | null, max: number | null) => void }) {
+  const [a, setA] = useState(min !== null ? String(min / 100) : '')
+  const [b, setB] = useState(max !== null ? String(max / 100) : '')
+  const toFils = (v: string) => { const n = Number(v.replace(/[,\s]/g, '')); return v.trim() && Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null }
+  return (
+    <form className="mt-3 flex items-center gap-1.5" onSubmit={(e) => { e.preventDefault(); onApply(toFils(a), toFils(b)) }}>
+      <input className="input h-9 px-2.5 text-sm" inputMode="decimal" placeholder="Min" value={a} onChange={(e) => setA(e.target.value)} aria-label="Minimum price in AED" />
+      <span className="text-navy-600/60">–</span>
+      <input className="input h-9 px-2.5 text-sm" inputMode="decimal" placeholder="Max" value={b} onChange={(e) => setB(e.target.value)} aria-label="Maximum price in AED" />
+      <Button type="submit" size="sm" variant="outline" className="h-9 px-3">Go</Button>
+    </form>
   )
 }

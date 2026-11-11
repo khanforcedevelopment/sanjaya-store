@@ -1,70 +1,14 @@
 import { useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Plus } from 'lucide-react'
-import { Alert, Badge, Skeleton } from '@/components/ui/misc'
+import { Alert, Skeleton } from '@/components/ui/misc'
 import { Button } from '@/components/ui/Button'
 import { InputField, SelectField, TextareaField } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
 import { useCategories } from '@/features/catalog/api'
 import { requireSupabase, friendlyError } from '@/lib/supabase'
-import { formatAED } from '@/lib/money'
 import { AdminTitle, Table, Td, aedInput } from './ui'
-
-export function AdminProducts() {
-  const [sp, setSp] = useSearchParams()
-  const q = sp.get('q') ?? ''
-  const low = sp.get('low') === '1'
-  const page = Number(sp.get('page') ?? 0)
-  const { data, isLoading } = useQuery({
-    queryKey: ['admin', 'products', q, low, page],
-    queryFn: async () => {
-      let query = requireSupabase().from('products')
-        .select('id, slug, name, brand, is_active, is_featured, tags, category:categories(name), product_variants(id, stock, price_paise, low_stock_threshold, is_active)', { count: 'exact' })
-        .order('created_at', { ascending: false }).range(page * 50, page * 50 + 49)
-      if (q) query = query.or(`name.ilike.%${q.replace(/[,()]/g, ' ')}%,brand.ilike.%${q.replace(/[,()]/g, ' ')}%,slug.ilike.%${q.replace(/[,()]/g, ' ')}%`)
-      const { data, error, count } = await query
-      if (error) throw error
-      const rows = low ? data.filter((p) => p.product_variants.some((v) => v.is_active && v.stock <= v.low_stock_threshold)) : data
-      return { rows, count: count ?? 0 }
-    },
-  })
-  const set = (k: string, v: string) => { const n = new URLSearchParams(sp); if (v) n.set(k, v); else n.delete(k); n.delete('page'); setSp(n, { replace: true }) }
-
-  return (
-    <>
-      <AdminTitle title="Products" subtitle={data ? `${data.count.toLocaleString('en-GB')} products` : undefined}>
-        <input className="input h-9 w-56" placeholder="Search name, brand, slug" defaultValue={q} onKeyDown={(e) => e.key === 'Enter' && set('q', (e.target as HTMLInputElement).value.trim())} aria-label="Search products" />
-        <Button size="sm" variant={low ? 'danger' : 'outline'} onClick={() => set('low', low ? '' : '1')}>Low stock</Button>
-        <Link to="/admin/products/new" className="inline-flex h-9 items-center gap-1 rounded-full bg-navy-900 px-4 text-sm font-semibold text-white"><Plus className="size-4" /> New product</Link>
-      </AdminTitle>
-      {isLoading ? <Skeleton className="h-96" /> : (
-        <>
-          <Table head={['Product', 'Category', 'Price from', 'Stock', 'Status']} empty={!data?.rows.length}>
-            {data?.rows.map((p) => {
-              const vs = p.product_variants.filter((v) => v.is_active)
-              const stock = vs.reduce((n, v) => n + v.stock, 0)
-              const lowCount = vs.filter((v) => v.stock <= v.low_stock_threshold).length
-              return (
-                <tr key={p.id}>
-                  <Td><Link to={`/admin/products/${p.id}`} className="font-semibold text-navy-900 hover:text-gold-700">{p.name}</Link><span className="block text-xs text-navy-600">{p.brand}{p.tags.includes('demo') && ' · demo'}</span></Td>
-                  <Td>{(p.category as { name: string } | null)?.name}</Td>
-                  <Td>{vs.length ? formatAED(Math.min(...vs.map((v) => v.price_paise))) : '—'}</Td>
-                  <Td>{stock}{lowCount > 0 && <Badge tone="red" className="ml-2">{lowCount} low</Badge>}</Td>
-                  <Td>{p.is_active ? <Badge tone="green">Live</Badge> : <Badge tone="grey">Hidden</Badge>}{p.is_featured && <Badge tone="gold" className="ml-1">Featured</Badge>}</Td>
-                </tr>
-              )
-            })}
-          </Table>
-          <div className="mt-4 flex justify-center gap-2">
-            <Button size="sm" variant="outline" disabled={page === 0} onClick={() => { const n = new URLSearchParams(sp); n.set('page', String(page - 1)); setSp(n) }}>Previous</Button>
-            <Button size="sm" variant="outline" disabled={!data || (page + 1) * 50 >= data.count} onClick={() => { const n = new URLSearchParams(sp); n.set('page', String(page + 1)); setSp(n) }}>Next</Button>
-          </div>
-        </>
-      )}
-    </>
-  )
-}
 
 const slugify = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)
 
