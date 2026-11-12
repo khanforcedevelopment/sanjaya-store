@@ -1,3 +1,4 @@
+import { ScrollRow } from '@/components/ui/ScrollRow'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal, SearchX, ChevronRight } from 'lucide-react'
@@ -97,9 +98,9 @@ export function ListingPage({ mode }: { mode: 'category' | 'search' | 'deals' })
         </div>
       </div>
       {children.length > 0 && (
-        <div className="scrollbar-none -mx-4 mb-6 flex gap-2 overflow-x-auto px-4">
+        <ScrollRow tone="dark" wrapperClassName="-mx-4 mb-6 sm:mx-0" className="flex gap-2 px-4 sm:px-0">
           {children.map((c) => <Link key={c.id} to={`/c/${c.slug}`} className="whitespace-nowrap rounded-full border border-navy-100 bg-white px-4 py-2 text-sm font-medium hover:border-gold-500">{c.name}</Link>)}
-        </div>
+        </ScrollRow>
       )}
       <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
         <aside className="hidden lg:block">{filters}</aside>

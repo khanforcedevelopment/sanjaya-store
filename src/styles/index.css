@@ -34,6 +34,7 @@
 
 @layer base {
   html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+  h1, h2, h3 { overflow-wrap: break-word; }
   body { @apply bg-ivory font-sans text-ink antialiased; }
   :focus-visible { @apply outline-2 outline-offset-2 outline-gold-500; }
   ::selection { @apply bg-gold-200 text-navy-900; }

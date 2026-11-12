@@ -1,3 +1,4 @@
+import { ScrollRow } from '@/components/ui/ScrollRow'
 import { NavLink, Outlet } from 'react-router-dom'
 import { CalendarClock, Gift, Heart, LifeBuoy, Package, LayoutDashboard, LogOut, MapPin, UserRound, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/features/account/AuthProvider'
@@ -26,7 +27,7 @@ export function AccountLayout() {
             <p className="eyebrow">My account</p>
             <p className="mt-1 truncate font-display text-xl font-semibold text-navy-900">{name}</p>
           </div>
-          <nav aria-label="Account" className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-col lg:gap-1 lg:px-0">
+          <ScrollRow as="nav" label="Account" tone="dark" wrapperClassName="-mx-4 lg:mx-0" className="flex gap-2 px-4 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0">
             {LINKS.map(({ to, label, icon: Icon, end }) => (
               <NavLink key={to} to={to} end={end}
                 className={({ isActive }) => cn('flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium lg:rounded-xl',
@@ -42,7 +43,7 @@ export function AccountLayout() {
             <button onClick={() => signOut()} className="flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-navy-600 hover:text-danger lg:rounded-xl">
               <LogOut className="size-4" /> Sign out
             </button>
-          </nav>
+          </ScrollRow>
         </aside>
         <section className="min-w-0"><Outlet /></section>
       </div>
