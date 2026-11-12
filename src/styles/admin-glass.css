@@ -113,17 +113,23 @@
 
 /* Navigation: icon rail + bottom dock */
 .glass-admin .rail-btn {
-  position: relative; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 999px;
+  position: relative; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 999px;
   color: var(--text); background: transparent; transition: background 0.2s ease;
 }
 .glass-admin .rail-btn:hover { background: rgba(255, 255, 255, 0.45); }
 .glass-admin .rail-btn.active { background: #fff; box-shadow: 0 4px 14px rgba(40, 25, 10, 0.18); }
-.glass-admin .rail-btn .tip {
-  pointer-events: none; position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
-  white-space: nowrap; border-radius: 999px; background: var(--black); color: #fff; font-size: 0.75rem; font-weight: 600;
-  padding: 0.3rem 0.7rem; opacity: 0; transition: opacity 0.15s ease; z-index: 30;
+.rail-tip {
+  position: fixed; z-index: 100; transform: translateY(-50%); pointer-events: none;
+  white-space: nowrap; border-radius: 999px; background: #141414; color: #fff;
+  font: 600 12px/1.2 'Inter', system-ui, sans-serif; padding: 0.4rem 0.75rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); animation: glassTipIn 0.12s ease both;
 }
-.glass-admin .rail-btn:hover .tip, .glass-admin .rail-btn:focus-visible .tip { opacity: 1; }
+@keyframes glassTipIn { from { opacity: 0; transform: translate(-4px, -50%); } to { opacity: 1; transform: translateY(-50%); } }
+
+/* Laptops (up to ~1600px wide or short screens): everything in rem shrinks a little so pages fit */
+@media (max-width: 1600px), (max-height: 860px) { html.admin-compact { font-size: 87.5%; } }
+@media (max-width: 1280px) { html.admin-compact { font-size: 81.25%; } }
+@media (max-width: 640px) { html.admin-compact { font-size: 93.75%; } }
 
 .glass-admin .dock-btn {
   display: inline-flex; align-items: center; gap: 0.4rem; height: 2.5rem; padding: 0 1rem; border-radius: 999px;

@@ -188,7 +188,7 @@ export function AdminProducts() {
             <thead className="border-b text-xs uppercase tracking-wider muted">
               <tr>
                 <th className="w-10 px-3 py-2.5"><input type="checkbox" className="size-4 accent-black" checked={pageAllOn} onChange={togglePage} aria-label="Select all on this page" /></th>
-                {['Product', 'Category', 'Price from', 'Stock', 'Status'].map((h) => <th key={h} className="px-3 py-2.5 font-semibold">{h}</th>)}
+                {['Product', 'Category', 'Price from', 'Stock', 'Status'].map((h) => <th key={h} className="whitespace-nowrap px-3 py-2.5 font-semibold">{h}</th>)}
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -205,9 +205,9 @@ export function AdminProducts() {
                       </div>
                     </div>
                   </Td>
-                  <Td>{p.category_name}</Td>
-                  <Td>{p.variants ? aed(p.min_price) : '—'}</Td>
-                  <Td>{p.stock}{p.low_variants > 0 && <Badge tone={p.stock === 0 ? 'red' : 'amber'} className="ml-2">{p.stock === 0 ? 'out' : `${p.low_variants} low`}</Badge>}</Td>
+                  <Td className="max-w-[180px]">{p.category_name}</Td>
+                  <Td className="whitespace-nowrap">{p.variants ? aed(p.min_price) : '—'}</Td>
+                  <Td className="whitespace-nowrap">{p.stock}{p.low_variants > 0 && <Badge tone={p.stock === 0 ? 'red' : 'amber'} className="ml-2">{p.stock === 0 ? 'out' : `${p.low_variants} low`}</Badge>}</Td>
                   <Td>{p.is_active ? <Badge tone="green">Live</Badge> : <Badge tone="grey">Hidden</Badge>}{p.is_featured && <Badge tone="gold" className="ml-1">Featured</Badge>}</Td>
                 </tr>
               ))}
