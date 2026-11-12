@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FocusEvent, type MouseEvent } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   BarChart3, Bike, Boxes, CalendarClock, ChartPie, FileUp, Gift, Home, IdCard, LifeBuoy, Maximize2, Megaphone, Minimize2,
@@ -73,19 +73,31 @@ export function AdminLayout() {
   const links = NAV.filter((n) => hasRole(...n.roles))
   const dock = DOCK.map((to) => links.find((l) => l.to === to)).filter((x): x is Item => !!x)
   const name = profile?.full_name?.split(' ')[0] || 'Sanjaya'
+  // Tooltip is drawn outside the rail, so the page never covers it and the rail can scroll
+  const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null)
+  const show = (label: string) => (e: MouseEvent<HTMLElement> | FocusEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    setTip({ label, top: r.top + r.height / 2, left: r.right + 10 })
+  }
+  const tipProps = (label: string) => ({ onMouseEnter: show(label), onFocus: show(label), onMouseLeave: () => setTip(null), onBlur: () => setTip(null), onClick: () => setTip(null) })
+  // Laptop screens: draw the whole staff panel a little smaller so it fits
+  useEffect(() => {
+    document.documentElement.classList.add('admin-compact')
+    return () => document.documentElement.classList.remove('admin-compact')
+  }, [])
   const initials = (profile?.full_name || 'S').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()
 
   return (
     <div className="glass-admin">
-      <div className="mx-auto flex min-h-dvh max-w-[1500px] gap-4 px-3 pb-28 pt-3 sm:px-5 sm:pt-5">
-        {/* Left icon rail */}
-        <aside className="sticky top-5 hidden h-fit lg:block">
-          <nav aria-label="Staff" className="glass flex flex-col items-center gap-1.5 !rounded-full p-1.5">
-            <NavLink to="/" className="rail-btn" aria-label="Back to store"><Store className="size-4" /><span className="tip">Open the store</span></NavLink>
-            <span className="my-1 h-px w-6 bg-white/70" aria-hidden />
+      <div className="mx-auto flex min-h-dvh max-w-[1600px] gap-4 px-3 pb-24 pt-3 sm:px-5 sm:pt-5">
+        {/* Left icon rail: fits the screen height and scrolls if there are many pages */}
+        <aside className="sticky top-3 z-40 hidden h-fit lg:block sm:top-5">
+          <nav aria-label="Staff" className="glass scrollbar-none flex max-h-[calc(100dvh-2.5rem)] flex-col items-center gap-1 overflow-y-auto !rounded-[999px] p-1.5">
+            <NavLink to="/" className="rail-btn flex-none" aria-label="Open the store" {...tipProps('Open the store')}><Store className="size-4" /></NavLink>
+            <span className="my-0.5 h-px w-6 flex-none bg-white/70" aria-hidden />
             {links.map(({ to, label, icon: Icon, end }) => (
-              <NavLink key={to} to={to} end={end} aria-label={label} className={({ isActive }) => cn('rail-btn', isActive && 'active')}>
-                <Icon className="size-[18px]" /><span className="tip">{label}</span>
+              <NavLink key={to} to={to} end={end} aria-label={label} {...tipProps(label)} className={({ isActive }) => cn('rail-btn flex-none', isActive && 'active')}>
+                <Icon className="size-[18px]" />
               </NavLink>
             ))}
           </nav>
@@ -115,6 +127,8 @@ export function AdminLayout() {
           <main key={pathname} className="page-in min-w-0"><Outlet /></main>
         </div>
       </div>
+
+      {tip && <div role="tooltip" className="rail-tip" style={{ top: tip.top, left: tip.left }}>{tip.label}</div>}
 
       {/* Bottom floating dock */}
       {dock.length > 1 && (
