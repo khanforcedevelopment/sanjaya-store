@@ -1,3 +1,4 @@
+import { ScrollRow } from '@/components/ui/ScrollRow'
 import { business } from '@/config/business'
 import { useState, type FormEvent } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
@@ -85,19 +86,19 @@ export function Header() {
         </div>
         <div className="container-x pb-3 md:hidden"><SearchBox /></div>
         {/* Phones and tablets: swipeable category chips */}
-        <ul className="scrollbar-none flex gap-2 overflow-x-auto px-4 pb-3 text-[12.5px] lg:hidden" aria-label="Categories">
+        <ScrollRow as="ul" tone="light" wrapperClassName="lg:hidden" fadeClassName="bottom-3" className="flex gap-2 px-4 pb-3 text-[12.5px]" label="Categories">
           <li><Link to="/deals" className="block whitespace-nowrap rounded-full bg-gold-400 px-3 py-1.5 font-semibold text-navy-950">Deals</Link></li>
           {subs.map((c) => (
             <li key={c.id}><NavLink to={`/c/${c.slug}`} className={({ isActive }) => cn('block whitespace-nowrap rounded-full border border-white/20 px-3 py-1.5 text-white/90', isActive && 'border-gold-400 text-gold-300')}>{c.name}</NavLink></li>
           ))}
-        </ul>
+        </ScrollRow>
         <nav className="relative hidden border-t border-white/10 lg:block" aria-label="Categories" onMouseLeave={() => setMegaOpen(false)}>
           <div className="container-x flex items-center gap-2 py-1.5 text-[13.5px]">
             <button type="button" onMouseEnter={() => setMegaOpen(true)} onClick={() => setMegaOpen((o) => !o)} aria-expanded={megaOpen}
               className={cn('flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 font-semibold transition', megaOpen ? 'bg-gold-400 text-navy-950' : 'bg-white/10 text-white hover:bg-white/15')}>
               <LayoutGrid className="size-4" /> All categories <ChevronDown className={cn('size-3.5 transition', megaOpen && 'rotate-180')} />
             </button>
-            <ul className="scrollbar-none flex min-w-0 flex-1 gap-1 overflow-x-auto">
+            <ScrollRow as="ul" tone="light" wrapperClassName="flex-1" className="flex gap-1">
               <li><NavLink to="/deals" className="block whitespace-nowrap rounded-full px-3.5 py-1.5 font-semibold text-gold-300 hover:bg-white/10">Deals</NavLink></li>
               {subs.map((c) => (
                 <li key={c.id}>
@@ -106,7 +107,7 @@ export function Header() {
                   </NavLink>
                 </li>
               ))}
-            </ul>
+            </ScrollRow>
           </div>
           {megaOpen && (
             <div className="absolute inset-x-0 top-full z-50 border-t border-gold-400/30 bg-white text-navy-900 shadow-[var(--shadow-lift)]">

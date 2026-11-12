@@ -1,3 +1,4 @@
+import { ScrollRow } from '@/components/ui/ScrollRow'
 import { business } from '@/config/business'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -168,7 +169,7 @@ function CategoryTiles() {
   return (
     <section className="container-x py-10">
       <SectionHeading eyebrow="Shop by category" title="Find exactly what you need" />
-      <ul className="scrollbar-none -mx-4 grid auto-cols-[5.5rem] grid-flow-col grid-rows-2 gap-x-3 gap-y-5 overflow-x-auto px-4 pb-2 sm:mx-0 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-5 sm:grid-rows-none sm:overflow-visible sm:px-0 lg:grid-cols-7 xl:grid-cols-10">
+      <ScrollRow as="ul" tone="dark" wrapperClassName="-mx-4 sm:mx-0" className="grid auto-cols-[5.5rem] grid-flow-col grid-rows-2 gap-x-3 gap-y-5 px-4 pb-2 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-5 sm:grid-rows-none sm:overflow-visible sm:px-0 lg:grid-cols-7 xl:grid-cols-10">
         {list.map((c) => (
           <li key={c.id}>
             <Link to={`/c/${c.slug}`} className="group flex flex-col items-center gap-2 text-center">
@@ -179,7 +180,7 @@ function CategoryTiles() {
             </Link>
           </li>
         ))}
-      </ul>
+      </ScrollRow>
     </section>
   )
 }

@@ -1,3 +1,4 @@
+import { ScrollRow } from '@/components/ui/ScrollRow'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -94,7 +95,7 @@ function ProductView({ p }: { p: ProductDetail }) {
         <ChevronRight className="size-3" /><span className="line-clamp-1 text-navy-800">{p.name}</span>
       </nav>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:gap-14">
+      <div className="grid gap-8 md:grid-cols-2 lg:gap-14 [&>*]:min-w-0">
         <div>
           <div className="relative aspect-square overflow-hidden rounded-3xl border border-navy-100 bg-navy-50">
             {images[imgIdx]?.url && <img src={images[imgIdx]!.url} alt={images[imgIdx]!.alt ?? p.name} className="size-full object-cover" />}
@@ -103,13 +104,13 @@ function ProductView({ p }: { p: ProductDetail }) {
             </button>
           </div>
           {images.length > 1 && (
-            <div className="mt-3 flex gap-3">
+            <ScrollRow tone="dark" wrapperClassName="mt-3" className="flex gap-3">
               {images.map((im, k) => (
-                <button key={im.id} onClick={() => setImgIdx(k)} className={cn('size-20 overflow-hidden rounded-2xl border-2 bg-navy-50', k === imgIdx ? 'border-gold-500' : 'border-transparent')} aria-label={`Image ${k + 1}`}>
+                <button key={im.id} onClick={() => setImgIdx(k)} className={cn('size-16 shrink-0 overflow-hidden rounded-2xl sm:size-20 border-2 bg-navy-50', k === imgIdx ? 'border-gold-500' : 'border-transparent')} aria-label={`Image ${k + 1}`}>
                   <img src={im.url} alt="" className="size-full object-cover" />
                 </button>
               ))}
-            </div>
+            </ScrollRow>
           )}
         </div>
 
@@ -178,7 +179,7 @@ function ProductView({ p }: { p: ProductDetail }) {
         </div>
       </div>
 
-      <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_1fr]">
+      <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_1fr] [&>*]:min-w-0">
         <section>
           <h2 className="font-display text-3xl font-semibold text-navy-900">Details</h2>
           {p.description && <p className="mt-3 whitespace-pre-line text-navy-800">{p.description}</p>}
